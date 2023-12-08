@@ -1,0 +1,18 @@
+{
+    "manifest_version": 2,
+    "name": "DynamicPrompter4NAI3",
+    "version": "0.1",
+    "permissions": [
+        "tabs",
+        "storage",
+        "activeTab"
+    ],
+    "background": {
+        "scripts": ["background.js"]
+    },
+    "browser_action": {},
+    "content_scripts": [{
+        "matches": ["https://novelai.net/*"],
+        "js": ["utils.js", "content.js"]
+    }]
+}

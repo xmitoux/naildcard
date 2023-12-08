@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DynamicPrompter4NAI Settings</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+<body class="p-3 mb-2 bg-light text-dark">
+    <div class="container">
+        <h3>DynamicPrompter4NAI Settings</h3>
+        <form id="settingsForm">
+            <div class="form-group">
+                <label for="enabled">Enabled</label>
+                <input type="checkbox" class="form-control" id="enabled" name="enabled">
+            </div>
+
+            <div class="form-group">
+                <label for="interval">Interval(sec.)</label>
+                <input type="number" class="form-control" id="interval" name="interval">
+            </div>
+
+            <div class="form-group">
+                <label for="className">Prompt Area Class Name</label>
+                <input type="text" class="form-control" id="className" name="className">
+            </div>
+
+            <div class="form-group">
+                <label for="prompt">Prompt Template</label>
+                <textarea class="form-control" id="prompt" name="prompt" rows="10"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="wildcards">Wildcards</label>
+                <textarea class="form-control" id="wildcards" name="wildcards" rows="10"></textarea>
+            </div>
+        </form>
+    </div>
+    <script src="popup.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>
