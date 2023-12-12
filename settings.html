@@ -6,21 +6,26 @@
 </head>
 <body class="p-3 mb-2 bg-light text-dark">
     <div class="container">
-        <h3>DynamicPrompter4NAI Settings</h3>
+        <h3>Naildcard Settings</h3>
         <form id="settingsForm">
             <div class="form-group">
-                <label for="enabled">Enabled</label>
-                <input type="checkbox" class="form-control" id="enabled" name="enabled">
+                <label for="rapidfireModeEnabled">Enabled</label>
+                <input type="checkbox" class="form-control" id="rapidfireModeEnabled" name="rapidfireModeEnabled">
+            </div>
+            
+            <div class="form-group">
+                <label for="autoGeneratingEnabled">Auto Generating</label>
+                <input type="checkbox" class="form-control" id="autoGeneratingEnabled" name="autoGeneratingEnabled">
             </div>
 
             <div class="form-group">
-                <label for="interval">Interval(sec.)</label>
-                <input type="number" class="form-control" id="interval" name="interval">
+                <label for="autoGeneratingInterval">Auto Generating Interval (Sec.)</label>
+                <input type="number" class="form-control" id="autoGeneratingInterval" name="autoGeneratingInterval">
             </div>
-
+            
             <div class="form-group">
-                <label for="className">Prompt Area Class Name</label>
-                <input type="text" class="form-control" id="className" name="className">
+                <label for="autoAdjustingAspectRatio">Auto Adjusting Aspect Ratio</label>
+                <input type="checkbox" class="form-control" id="autoAdjustingAspectRatio" name="autoAdjustingAspectRatio">
             </div>
 
             <div class="form-group">
@@ -35,6 +40,5 @@
         </form>
     </div>
     <script src="popup.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 </body>
 </html>
