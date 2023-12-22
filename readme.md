@@ -1,4 +1,4 @@
-# 🎲Naildcard
+# 🎲🃏Naildcard🤖🎨
 
 NAI用Chrome拡張機能です。dynamic promptsっぽいことができます。
 
