@@ -2,9 +2,9 @@
  * wildcardのパース
  */
 export function parseWildcardsString(wildcardsStr: string) {
-    let output: WildcardMap = {};
+    const output: WildcardMap = {};
 
-    let lines = wildcardsStr.split('\n');
+    const lines = wildcardsStr.split('\n');
 
     let currentKey = '';
     lines.forEach((line) => {

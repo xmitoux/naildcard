@@ -94,7 +94,7 @@ export function createPrompt(template: string, wildcardMap: WildcardMap) {
             }
         };
 
-        for (let match of matches) {
+        for (const match of matches) {
             const content = extractString(match) || [];
             const choice = selectRandomByWeight(content);
             str = str.replace(match, choice);

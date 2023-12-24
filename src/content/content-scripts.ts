@@ -1,9 +1,10 @@
 import { parseWildcardsString } from '@/utils/utils';
 import { createPrompt, removeCommentLines } from './dynamic-prompts';
 import {
-    GENERATE_BUTTON,
-    NEGATIVE_PROMPT_BUTTON_EN,
-    NEGATIVE_PROMPT_BUTTON_JP,
+    GENERATE_BUTTON_TEXTS_EN,
+    GENERATE_BUTTON_TEXTS_JP,
+    NEGATIVE_PROMPT_BUTTON_TEXT_EN,
+    NEGATIVE_PROMPT_BUTTON_TEXT_JP,
 } from '@/constants/nai';
 
 /**
@@ -20,6 +21,7 @@ export function insertPrompt(prompt: string, wildcards: string) {
         textbox.value = stringToInsert;
 
         // プロンプト欄のReactコンポーネントのinputイベントを発火させてテキスト入力を確定させる
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (textbox as any)._valueTracker = '';
         textbox.dispatchEvent(new Event('input', { bubbles: true }));
     }
@@ -30,14 +32,17 @@ export function insertPrompt(prompt: string, wildcards: string) {
  */
 export function isNegativePromptVisible() {
     const buttons = document.querySelectorAll('button');
-    for (let button of buttons) {
+
+    // ネガティブロンプトボタンをテキストで探す
+    for (const button of buttons) {
         const buttonText = button.textContent;
         if (
-            buttonText!.includes(NEGATIVE_PROMPT_BUTTON_EN) ||
-            buttonText!.includes(NEGATIVE_PROMPT_BUTTON_JP)
+            buttonText!.includes(NEGATIVE_PROMPT_BUTTON_TEXT_EN) ||
+            buttonText!.includes(NEGATIVE_PROMPT_BUTTON_TEXT_JP)
         ) {
             const nextElement = button.nextElementSibling;
 
+            // タブ移動ボタンのdivが同階層にあればネガティブボタンを選択中
             return nextElement && nextElement.tagName === 'DIV';
         }
     }
@@ -46,12 +51,35 @@ export function isNegativePromptVisible() {
 }
 
 /**
+ * 生成ボタンを取得する
+ */
+export function getOriginalGenerateButton(): HTMLElement | null {
+    let generateButton: HTMLElement | null = null;
+
+    // 生成ボタンをspanタグのテキストで探す
+    const buttons = document.querySelectorAll('button');
+    for (const button of buttons) {
+        const span = button.querySelector('span');
+
+        if (
+            GENERATE_BUTTON_TEXTS_EN.every((text) => span?.textContent?.includes(text)) ||
+            GENERATE_BUTTON_TEXTS_JP.every((text) => span?.textContent?.includes(text))
+        ) {
+            generateButton = button;
+            break;
+        }
+    }
+
+    return generateButton;
+}
+
+/**
  * プロンプト入力ボタンの作成
  * @param {Function} func 実行する関数
  * @returns {boolean} 作成できたか
  */
 export function createDynamicPromptButton(func: EventListenerOrEventListenerObject): boolean {
-    const generateButtonOrg = document.querySelector(GENERATE_BUTTON) as HTMLElement;
+    const generateButtonOrg = getOriginalGenerateButton();
 
     if (!generateButtonOrg) {
         return false;

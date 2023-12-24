@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ACTION_UPDATE_SETTINGS, TARGET_URL } from '@/constants/chrome';
+import { ACTION_UPDATE_SETTINGS } from '@/constants/chrome';
+import { NAI_URL } from '@/constants/nai';
 import { parseWildcardsString } from '@/utils/utils';
 import { ElMessage, ElMessageBox } from 'element-plus';
 
@@ -97,7 +98,7 @@ const parseWildcardObject = (obj: Record<string, string[]>): string => {
 const saveWildcard = async (wildcardsString: string) => {
     await chrome.storage.sync.set({ wildcards: wildcardsString });
 
-    const [tab] = await chrome.tabs.query({ url: TARGET_URL });
+    const [tab] = await chrome.tabs.query({ url: NAI_URL });
     if (tab && tab.id) {
         await chrome.tabs.sendMessage(tab.id, { action: ACTION_UPDATE_SETTINGS });
     }

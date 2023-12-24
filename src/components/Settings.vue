@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { ACTION_UPDATE_SETTINGS, TARGET_URL } from '@/constants/chrome';
+import { ACTION_UPDATE_SETTINGS } from '@/constants/chrome';
+import { NAI_URL } from '@/constants/nai';
 
+// eslint-disable-next-line no-undef
 type GeneralSettings = Omit<Settings, 'wildcards'>;
 const currentSettings = ref<GeneralSettings>({
     naildcardEnabled: false,
@@ -16,7 +17,7 @@ onMounted(async () => {
 const saveSettings = async () => {
     await chrome.storage.sync.set(currentSettings.value);
 
-    const [tab] = await chrome.tabs.query({ url: TARGET_URL });
+    const [tab] = await chrome.tabs.query({ url: NAI_URL });
     if (tab && tab.id) {
         await chrome.tabs.sendMessage(tab.id, { action: ACTION_UPDATE_SETTINGS });
     }

@@ -11,7 +11,7 @@ import IconsResolver from 'unplugin-icons/resolver';
 const manifest = defineManifest({
     manifest_version: 3,
     name: 'Naildcard',
-    version: '1.0',
+    version: '1.0.0',
     permissions: ['tabs', 'storage', 'activeTab', 'scripting'],
     options_page: 'index.html',
     background: {
@@ -28,7 +28,7 @@ const manifest = defineManifest({
     content_scripts: [
         {
             run_at: 'document_end',
-            matches: ['https://novelai.net/*'],
+            matches: ['https://novelai.net/image'],
             js: ['./src/content/content.ts'],
         },
     ],
@@ -56,6 +56,12 @@ export default defineConfig({
             ],
 
             dts: path.resolve(pathSrc, 'auto-imports.d.ts'),
+            vueTemplate: true,
+            eslintrc: {
+                enabled: true,
+                filepath: './.eslintrc-auto-import.json',
+                globalsPropValue: true,
+            },
         }),
         Components({
             resolvers: [
