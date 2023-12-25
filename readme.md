@@ -48,7 +48,7 @@ NAI用Chrome拡張機能です。dynamic promptsっぽいことができます�
             value1
             value2
 
-            wildcard2
+            wildcard2:
             value3
             value4
             ...
