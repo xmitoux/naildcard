@@ -163,6 +163,7 @@ color:
 2::red
 5::green
 blue
+3::(yellow|2::pink) and white
 ```
 
 ### ネスト
