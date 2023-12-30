@@ -15,7 +15,8 @@ declare module 'vue' {
     ElInput: typeof import('element-plus/es')['ElInput']
     ElRow: typeof import('element-plus/es')['ElRow']
     ElSwitch: typeof import('element-plus/es')['ElSwitch']
-    Settings: typeof import('./components/Settings.vue')['default']
+    PromptTextarea: typeof import('./components/PromptTextarea.vue')['default']
+    SettingPage: typeof import('./components/SettingPage.vue')['default']
     WildcardEditor: typeof import('./components/WildcardEditor.vue')['default']
   }
 }

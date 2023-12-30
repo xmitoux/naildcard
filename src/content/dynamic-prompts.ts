@@ -4,6 +4,14 @@
 export function createPrompt(template: string, wildcardMap: WildcardMap) {
     let resultPrompt = template;
 
+    // 部分コメント#...#の削除
+    const removeHashEnclosedText = (text: string): string => {
+        const regex = /#.*?#/g;
+        return text.replace(regex, '');
+    };
+
+    resultPrompt = removeHashEnclosedText(template);
+
     // 重み付け(n::)要素の選択
     const weightRegex = /^(\d+::)?(.+)$/;
     const selectRandomByWeight = (variants: string[]): string => {
@@ -40,7 +48,9 @@ export function createPrompt(template: string, wildcardMap: WildcardMap) {
 
     // ()の選択
     const replaceBracketedParams = (bracketedStr: string): string => {
-        let replacedValue: string = bracketedStr;
+        // エスケープされた括弧を'^'と'$'に置換する
+        let replacedValue = bracketedStr.replace(/\\\(/g, '^').replace(/\\\)/g, '$');
+
         let oldValue: string | null = null;
 
         while (oldValue !== replacedValue) {
@@ -52,7 +62,10 @@ export function createPrompt(template: string, wildcardMap: WildcardMap) {
             });
         }
 
-        return replacedValue;
+        // '^', "$"を括弧に戻す
+        const finalStr = replacedValue.replace(/\^/g, '(').replace(/\$/g, ')');
+
+        return finalStr;
     };
 
     resultPrompt = replaceBracketedParams(resultPrompt);

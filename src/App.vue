@@ -1,11 +1,7 @@
-<script setup lang="ts">
-import Settings from './components/Settings.vue';
-import WildcardEditor from './components/WildcardEditor.vue';
-</script>
+<script setup lang="ts"></script>
 
 <template>
-    <Settings />
-    <WildcardEditor />
+    <SettingPage />
 </template>
 
 <style scoped></style>

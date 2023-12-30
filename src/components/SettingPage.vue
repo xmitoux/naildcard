@@ -22,6 +22,11 @@ const saveSettings = async () => {
         await chrome.tabs.sendMessage(tab.id, { action: ACTION_UPDATE_SETTINGS });
     }
 };
+
+const savePrompt = async (changedPrompt: string) => {
+    currentSettings.value.prompt = changedPrompt;
+    saveSettings();
+};
 </script>
 
 <template>
@@ -34,12 +39,9 @@ const saveSettings = async () => {
 
     <el-form label-position="top" label-width="250px">
         <el-form-item label="Prompt Template">
-            <el-input
-                v-model="currentSettings.prompt"
-                :autosize="{ minRows: 10 }"
-                type="textarea"
-                @change="saveSettings"
-            />
+            <PromptTextarea :prompt-text-prop="currentSettings.prompt" @change="savePrompt" />
         </el-form-item>
     </el-form>
+
+    <WildcardEditor />
 </template>

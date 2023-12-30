@@ -9,7 +9,7 @@ const wildcards = ref<Record<string, string[]>>({});
 
 const newWildcardKey = ref<string>('');
 const selectedWildcardKey = ref<string | null>(null);
-const wildcardTextareaRef = ref<HTMLTextAreaElement | null>(null);
+const wildcardTextareaRef = ref<{ textareaRef: { textarea: HTMLTextAreaElement } } | null>(null);
 
 onMounted(async () => {
     const storageSettings = await chrome.storage.sync.get();
@@ -17,19 +17,11 @@ onMounted(async () => {
     wildcards.value = parseWildcardsString(wildcardsString.value);
 });
 
-const currentWildcardText = computed<string>({
-    get() {
-        if (!selectedWildcardKey.value) {
-            return '';
-        }
-        return wildcards.value[selectedWildcardKey.value]?.join('\n') || '';
-    },
-    set(value) {
-        if (!selectedWildcardKey.value) {
-            return;
-        }
-        wildcards.value[selectedWildcardKey.value] = value.split('\n');
-    },
+const currentWildcardText = computed<string>(() => {
+    if (!selectedWildcardKey.value) {
+        return '';
+    }
+    return wildcards.value[selectedWildcardKey.value]?.join('\n') || '';
 });
 
 const isWildcardManagerMode = ref(true);
@@ -46,7 +38,7 @@ const sortedWildcardKeys = computed<string[]>(() => Object.keys(wildcards.value)
 const addNewWildcardKey = () => {
     if (addWildcardKey(newWildcardKey.value)) {
         newWildcardKey.value = '';
-        wildcardTextareaRef.value?.focus();
+        nextTick(() => wildcardTextareaRef.value?.textareaRef.textarea.focus());
     }
 };
 
@@ -69,8 +61,9 @@ const addWildcardKey = (addingWildcardKey: string): boolean => {
 const wildcardKeyStyle = (wildcardKey: string) =>
     wildcardKey === selectedWildcardKey.value ? { 'background-color': 'lightblue' } : {};
 
-const saveInSimpleMode = () => {
-    saveWildcard(wildcardsString.value);
+const saveInSimpleMode = (changedWildcardsString: string) => {
+    wildcardsString.value = changedWildcardsString;
+    saveWildcard();
 };
 
 const parseWildcardObject = (obj: Record<string, string[]>): string => {
@@ -95,8 +88,8 @@ const parseWildcardObject = (obj: Record<string, string[]>): string => {
     return result.trim(); // 末尾の余分な改行を削除
 };
 
-const saveWildcard = async (wildcardsString: string) => {
-    await chrome.storage.sync.set({ wildcards: wildcardsString });
+const saveWildcard = async () => {
+    await chrome.storage.sync.set({ wildcards: wildcardsString.value });
 
     const [tab] = await chrome.tabs.query({ url: NAI_URL });
     if (tab && tab.id) {
@@ -104,9 +97,14 @@ const saveWildcard = async (wildcardsString: string) => {
     }
 };
 
+const changeSelectedWildcardText = (changedWildcardString: string) => {
+    wildcards.value[selectedWildcardKey.value!] = changedWildcardString.split('\n');
+    saveInPaneMode();
+};
+
 const saveInPaneMode = () => {
     wildcardsString.value = parseWildcardObject(wildcards.value);
-    saveWildcard(wildcardsString.value);
+    saveWildcard();
 };
 
 const hoveredWildcardKey = ref('');
@@ -271,24 +269,18 @@ watch(editWildcardKeyInputRef, () => {
                 </el-col>
 
                 <el-col :span="16">
-                    <el-input
-                        type="textarea"
-                        rows="10"
+                    <PromptTextarea
+                        v-show="selectedWildcardKey"
                         ref="wildcardTextareaRef"
-                        v-model="currentWildcardText"
-                        @change="saveInPaneMode"
+                        :prompt-text-prop="currentWildcardText"
+                        @change="changeSelectedWildcardText"
                     />
                 </el-col>
             </el-row>
         </template>
 
         <template v-else>
-            <el-input
-                type="textarea"
-                rows="10"
-                v-model="wildcardsString"
-                @change="saveInSimpleMode"
-            ></el-input>
+            <PromptTextarea :prompt-text-prop="wildcardsString" @change="saveInSimpleMode" />
         </template>
     </div>
 </template>

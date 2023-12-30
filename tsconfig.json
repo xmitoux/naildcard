@@ -26,5 +26,6 @@
         "typeRoots": ["./node_modules/@types", "./types", "element-plus/global"]
     },
     "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"],
+    "exclude": ["node_modules", "dist"],
     "references": [{ "path": "./tsconfig.node.json" }]
 }
