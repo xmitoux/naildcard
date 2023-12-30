@@ -214,7 +214,7 @@ __person__ __clothes__
 -   例: `This is #comment# example`  
     生成プロンプト: `This is  example`
 
-### 括弧操作ショートカット
+### ショートカットキー
 
 Prompt Template内では以下のショートカットキーが使用可能です。
 
