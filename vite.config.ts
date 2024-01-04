@@ -11,8 +11,8 @@ import IconsResolver from 'unplugin-icons/resolver';
 const manifest = defineManifest({
     manifest_version: 3,
     name: 'Naildcard',
-    version: '1.1.0',
-    permissions: ['tabs', 'storage', 'activeTab', 'scripting'],
+    version: '1.2.0',
+    permissions: ['tabs', 'storage', 'unlimitedStorage', 'activeTab', 'scripting'],
     options_page: 'index.html',
     background: {
         service_worker: './src/background.ts',
@@ -46,6 +46,7 @@ export default defineConfig({
     plugins: [
         vue(),
         crx({ manifest }),
+        // ライブラリの自動インポート設定
         AutoImport({
             imports: ['vue'],
             resolvers: [
@@ -56,6 +57,7 @@ export default defineConfig({
             ],
 
             dts: path.resolve(pathSrc, 'auto-imports.d.ts'),
+            dirs: ['./src/**'], // とりあえず全ソース
             vueTemplate: true,
             eslintrc: {
                 enabled: true,
@@ -63,6 +65,7 @@ export default defineConfig({
                 globalsPropValue: true,
             },
         }),
+        // Vueコンポーネントの自動インポート設定
         Components({
             resolvers: [
                 IconsResolver({

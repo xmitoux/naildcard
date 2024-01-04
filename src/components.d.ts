@@ -7,16 +7,9 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
-    ElButton: typeof import('element-plus/es')['ElButton']
-    ElCol: typeof import('element-plus/es')['ElCol']
-    ElForm: typeof import('element-plus/es')['ElForm']
-    ElFormItem: typeof import('element-plus/es')['ElFormItem']
-    ElIcon: typeof import('element-plus/es')['ElIcon']
-    ElInput: typeof import('element-plus/es')['ElInput']
-    ElRow: typeof import('element-plus/es')['ElRow']
-    ElSwitch: typeof import('element-plus/es')['ElSwitch']
+    DanbooruTagHelper: typeof import('./components/DanbooruTagHelper.vue')['default']
     PromptTextarea: typeof import('./components/PromptTextarea.vue')['default']
     SettingPage: typeof import('./components/SettingPage.vue')['default']
-    WildcardEditor: typeof import('./components/WildcardEditor.vue')['default']
+    WildcardManager: typeof import('./components/WildcardManager.vue')['default']
   }
 }

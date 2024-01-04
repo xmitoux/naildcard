@@ -1,12 +1,3 @@
-import { parseWildcardsString } from '@/utils/utils';
-import { createPrompt, removeCommentLines } from './dynamic-prompts';
-import {
-    GENERATE_BUTTON_TEXTS_EN,
-    GENERATE_BUTTON_TEXTS_JP,
-    NEGATIVE_PROMPT_BUTTON_TEXT_EN,
-    NEGATIVE_PROMPT_BUTTON_TEXT_JP,
-} from '@/constants/nai';
-
 /**
  * プロンプト入力処理
  */

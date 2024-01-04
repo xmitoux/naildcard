@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { useControlBracket } from '@/composables/useControlBracket';
-import { useInputHistory } from '@/composables/useInputHistory';
-import { useToggleComment } from '@/composables/useToggleComment';
+import { ElInput } from 'element-plus';
 
 const props = defineProps<{
     promptTextProp: string;
+    rows: number;
 }>();
 
 const promptText = ref('');
@@ -24,23 +23,25 @@ const { inputHistory } = useInputHistory(promptText);
 const { controlBracket, autoBracket } = useControlBracket(promptText);
 const { toggleComment } = useToggleComment(promptText);
 
-const handleKeydown = (event: KeyboardEvent) => {
-    inputHistory(event);
-    controlBracket(event);
-    toggleComment(event);
+const handleKeydown = (event: KeyboardEvent | Event) => {
+    const keyboardEvent = event as KeyboardEvent;
+    inputHistory(keyboardEvent);
+    controlBracket(keyboardEvent);
+    toggleComment(keyboardEvent);
 };
 
 watch(promptText, () => emit('change', promptText.value));
 </script>
 
 <template>
-    <el-input
+    <ElInput
         v-model="promptText"
         ref="textareaRef"
         type="textarea"
-        :autosize="{ minRows: 10 }"
+        resize="none"
+        :rows="props.rows"
         @change="emit('change', promptText)"
-        @keydown="handleKeydown($event)"
+        @keydown="handleKeydown"
         @beforeinput="autoBracket"
     />
 </template>
