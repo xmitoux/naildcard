@@ -44,7 +44,7 @@ export function isNegativePromptVisible() {
 /**
  * 生成ボタンを取得する
  */
-export function getOriginalGenerateButton(): HTMLElement | null {
+export function getGenerateButton(buttonText?: string): HTMLElement | null {
     let generateButton: HTMLElement | null = null;
 
     // 生成ボタンをspanタグのテキストで探す
@@ -52,12 +52,19 @@ export function getOriginalGenerateButton(): HTMLElement | null {
     for (const button of buttons) {
         const span = button.querySelector('span');
 
-        if (
-            GENERATE_BUTTON_TEXTS_EN.every((text) => span?.textContent?.includes(text)) ||
-            GENERATE_BUTTON_TEXTS_JP.every((text) => span?.textContent?.includes(text))
-        ) {
-            generateButton = button;
-            break;
+        if (!buttonText) {
+            if (
+                GENERATE_BUTTON_TEXTS_EN.every((text) => span?.textContent?.includes(text)) ||
+                GENERATE_BUTTON_TEXTS_JP.every((text) => span?.textContent?.includes(text))
+            ) {
+                generateButton = button;
+                break;
+            }
+        } else {
+            if (span?.textContent === buttonText) {
+                generateButton = button;
+                break;
+            }
         }
     }
 
@@ -70,9 +77,16 @@ export function getOriginalGenerateButton(): HTMLElement | null {
  * @returns {boolean} 作成できたか
  */
 export function createDynamicPromptButton(func: EventListenerOrEventListenerObject): boolean {
-    const generateButtonOrg = getOriginalGenerateButton();
-
+    const generateButtonOrg = getGenerateButton();
     if (!generateButtonOrg) {
+        return false;
+    }
+
+    // サイコロボタンが消されてないか確認
+    const diceButtonText = '🎲';
+    let diceButton = getGenerateButton(diceButtonText);
+    if (diceButton) {
+        // 残っているなら何もしない
         return false;
     }
 
@@ -80,19 +94,19 @@ export function createDynamicPromptButton(func: EventListenerOrEventListenerObje
     generateButtonOrg.style.display = 'inline-flex';
 
     // dynamic promptを入力するボタンを作成する
-    const button = document.createElement('button');
-    button.style.display = 'inline-flex';
-    button.style.backgroundColor = 'transparent';
-    button.style.border = 'none';
-    button.addEventListener('click', func);
+    diceButton = document.createElement('button');
+    diceButton.style.display = 'inline-flex';
+    diceButton.style.backgroundColor = 'transparent';
+    diceButton.style.border = 'none';
+    diceButton.addEventListener('click', func);
 
     const buttonSpan = document.createElement('span');
-    buttonSpan.textContent = '🎲';
+    buttonSpan.textContent = diceButtonText;
     buttonSpan.style.fontSize = 'x-large';
-    button.appendChild(buttonSpan);
+    diceButton.appendChild(buttonSpan);
 
     // 生成ボタンの前に挿入する
-    generateButtonOrg.parentNode!.insertBefore(button, generateButtonOrg);
+    generateButtonOrg.parentNode!.insertBefore(diceButton, generateButtonOrg);
 
     return true;
 }

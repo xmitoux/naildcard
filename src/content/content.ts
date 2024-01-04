@@ -1,10 +1,3 @@
-import {
-    createDynamicPromptButton,
-    isNegativePromptVisible,
-    insertPrompt,
-} from '@/content/content-scripts';
-import { ACTION_GET_SETTINGS, ACTION_UPDATE_SETTINGS } from '@/constants/chrome';
-
 // 設定変更時に設定を反映する
 let settings: Settings | null = null;
 chrome.runtime.onMessage.addListener((request, _sender, _sendResponse) => {
@@ -34,21 +27,18 @@ chrome.runtime.sendMessage({ action: ACTION_GET_SETTINGS }, (response) => {
         // 以降のsetIntervalコールバックが参照するsettingsはupdateSettingsリスナーで更新される
 
         // 生成ボタン表示を待機しサイコロボタンを表示
-        const inteval = setInterval(() => {
-            if (
-                createDynamicPromptButton(() => {
-                    if (!isNegativePromptVisible()) {
-                        // ポジティブプロンプト欄が表示中なら入力する
-                        try {
-                            insertPrompt(settings!.prompt, settings!.wildcards);
-                        } catch (error) {
-                            console.error('insertPrompt failed:', (error as Error).message);
-                        }
+        // (inpaintなどでサイコロボタンが消されたときのために監視し続ける)
+        setInterval(() => {
+            createDynamicPromptButton(() => {
+                if (!isNegativePromptVisible()) {
+                    // ポジティブプロンプト欄が表示中なら入力する
+                    try {
+                        insertPrompt(settings!.prompt, settings!.wildcards);
+                    } catch (error) {
+                        console.error('insertPrompt failed:', (error as Error).message);
                     }
-                })
-            ) {
-                clearInterval(inteval);
-            }
-        }, 1000);
+                }
+            });
+        }, 3000);
     }
 });
