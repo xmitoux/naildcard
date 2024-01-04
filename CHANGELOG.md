@@ -2,7 +2,7 @@
 
 ## 追加
 
--   Danbooru Tag Helper を実装
+-   [Danbooru Tag Helper](https://github.com/xmitoux/naildcard#danbooru-tag-helper)を実装
 
 ## 変更
 
