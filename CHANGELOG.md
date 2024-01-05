@@ -1,8 +1,15 @@
+# 1.2.1 (2024/01/05)
+
+## 修正
+
+-   インペイント画面を開くとサイコロボタンが消える不具合の修正
+-   ショートカットキーによる括弧の挿入が文頭で正常に動作しない不具合の修正
+
 # 1.2.0 (2024/01/04)
 
 ## 追加
 
--   Danbooru Tag Helper を実装
+-   [Danbooru Tag Helper](https://github.com/xmitoux/naildcard#danbooru-tag-helper)を実装
 
 ## 変更
 

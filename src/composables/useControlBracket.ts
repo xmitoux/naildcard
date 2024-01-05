@@ -143,7 +143,7 @@ export const useControlBracket = (promptText: Ref<string>) => {
             ),
         );
 
-        const start = delimiterBefore === -1 ? 0 : delimiterBefore + 1;
+        const start = delimiterBefore === 0 ? 0 : delimiterBefore + 1;
         const end =
             delimiterAfter === Infinity
                 ? leftText.length + rightText.length
