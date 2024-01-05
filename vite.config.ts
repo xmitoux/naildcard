@@ -11,7 +11,7 @@ import IconsResolver from 'unplugin-icons/resolver';
 const manifest = defineManifest({
     manifest_version: 3,
     name: 'Naildcard',
-    version: '1.2.0',
+    version: '1.2.1',
     permissions: ['tabs', 'storage', 'unlimitedStorage', 'activeTab', 'scripting'],
     options_page: 'index.html',
     background: {
