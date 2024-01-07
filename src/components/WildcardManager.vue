@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { DeleteFilled, EditPen } from '@element-plus/icons-vue';
+import { Check, Checked, Close, DeleteFilled, EditPen, List } from '@element-plus/icons-vue';
 import {
     ElButton,
+    ElButtonGroup,
     ElCol,
-    ElIcon,
     ElInput,
     ElMessage,
     ElPopconfirm,
@@ -72,8 +72,9 @@ const isWildcardSelected = (wildcardKey: string) => wildcardKey === selectedWild
 const wildcardTextareaRef = ref<PromptTextareaRef>(null);
 const newWildcardKey = ref<string>('');
 
+const newWildcardKeyTrim = computed(() => newWildcardKey.value.trim());
 const addNewWildcard = () => {
-    if (addWildcard(newWildcardKey.value)) {
+    if (addWildcard(newWildcardKeyTrim.value)) {
         newWildcardKey.value = '';
         saveWildcard();
         nextTick(() => wildcardTextareaRef.value?.textareaRef.textarea.focus());
@@ -81,17 +82,31 @@ const addNewWildcard = () => {
 };
 
 const addWildcard = (addingWildcardKey: string): boolean => {
-    if (!addingWildcardKey) {
-        return false;
-    }
-
-    if (Object.keys(wildcardsObj.value).includes(addingWildcardKey)) {
-        ElMessage.warning('Wildcard already exists!');
+    if (!validateWildcardName(addingWildcardKey)) {
         return false;
     }
 
     wildcardsObj.value[addingWildcardKey] = [];
     selectedWildcard.value = addingWildcardKey;
+
+    return true;
+};
+
+const invalidWildcardNameChars = ['(', ')', '<', '>', '$', '#', '__'];
+const validateWildcardName = (name: string): boolean => {
+    if (!name) {
+        return false;
+    }
+
+    if (invalidWildcardNameChars.some((invalidChar) => name.includes(invalidChar))) {
+        ElMessage.warning('Wildcard includes invalid chars!');
+        return false;
+    }
+
+    if (Object.keys(wildcardsObj.value).includes(name)) {
+        ElMessage.warning('Wildcard already exists!');
+        return false;
+    }
 
     return true;
 };
@@ -149,7 +164,7 @@ const startRenamingWildcard = (wildcardKey: string) => {
     renamedWildcard.value = wildcardKey;
 };
 
-const renameWildcardInputRef = ref<HTMLInputElement[] | null>(null);
+const renameWildcardInputRef = ref<InstanceType<typeof ElInput>[] | null>(null);
 watch(renameWildcardInputRef, () => {
     // リネーム時のオートフォーカス
     renameWildcardInputRef.value?.[0].focus();
@@ -165,7 +180,13 @@ const saveRenamingWildcard = () => {
         wildcardsObj.value[renamedWildcard.value] = wildcardsObj.value[renamingWildcard.value];
         delete wildcardsObj.value[renamingWildcard.value];
         saveWildcard();
+
+        // リネーム後を選択状態にするために保持
+        const renamedWildcardName = renamedWildcard.value;
+
         cancelRenamingWildcard();
+
+        selectWildcard(renamedWildcardName);
     }
 };
 
@@ -176,12 +197,20 @@ const cancelRenamingWildcard = () => {
 };
 
 const sortedWildcard = computed<string[]>(() => Object.keys(wildcardsObj.value).sort());
+
+const onRenameInputFocus = () => {
+    const input = renameWildcardInputRef.value![0].input!;
+    input.selectionStart = 0;
+    input.selectionEnd = renamingWildcard.value.length;
+};
+
+const { copying, copyToClipboard } = useClipboardCopy();
 </script>
 
 <template>
     <!-- 追加エリア -->
     <ElRow>
-        <ElCol :span="8">
+        <ElCol :span="9">
             <ElInput
                 v-model="newWildcardKey"
                 clearable
@@ -189,7 +218,7 @@ const sortedWildcard = computed<string[]>(() => Object.keys(wildcardsObj.value).
                 @keydown.prevent.enter="addNewWildcard"
             >
                 <template #append>
-                    <ElButton @click="addNewWildcard">Add</ElButton>
+                    <ElButton :disabled="!newWildcardKeyTrim" @click="addNewWildcard">Add</ElButton>
                 </template>
             </ElInput>
         </ElCol>
@@ -197,7 +226,7 @@ const sortedWildcard = computed<string[]>(() => Object.keys(wildcardsObj.value).
 
     <ElRow>
         <!-- 選択エリア -->
-        <ElCol :span="8">
+        <ElCol :span="9">
             <ElScrollbar :max-height="325">
                 <p
                     v-for="wildcardKey in sortedWildcard"
@@ -213,6 +242,7 @@ const sortedWildcard = computed<string[]>(() => Object.keys(wildcardsObj.value).
                     <ElInput
                         v-if="isWildcardRenaming(wildcardKey)"
                         v-model="renamedWildcard"
+                        @focus="onRenameInputFocus"
                         @keydown.prevent.enter="saveRenamingWildcard"
                         @keydown.prevent.esc="cancelRenamingWildcard"
                         ref="renameWildcardInputRef"
@@ -225,36 +255,48 @@ const sortedWildcard = computed<string[]>(() => Object.keys(wildcardsObj.value).
                     <!-- 編集ボタン -->
                     <template v-if="isWildcardSelected(wildcardKey) && !renamingWildcard">
                         <span class="edit-buttons">
-                            <ElButton
-                                type="primary"
-                                circle
-                                @click="startRenamingWildcard(wildcardKey)"
-                            >
-                                <ElIcon><EditPen /></ElIcon>
-                            </ElButton>
+                            <ElButtonGroup type="primary">
+                                <ElButton
+                                    circle
+                                    :icon="copying ? Checked : List"
+                                    @click="copyToClipboard(`__${wildcardKey}__`)"
+                                />
 
-                            <ElPopconfirm
-                                title="Are you sure to delete?"
-                                :width="200"
-                                @confirm="deleteWildcard(wildcardKey)"
-                            >
-                                <template #reference>
-                                    <ElButton type="danger" circle>
-                                        <ElIcon><DeleteFilled /></ElIcon>
-                                    </ElButton>
-                                </template>
-                            </ElPopconfirm>
+                                <ElButton
+                                    circle
+                                    :icon="EditPen"
+                                    @click="startRenamingWildcard(wildcardKey)"
+                                />
+
+                                <ElPopconfirm
+                                    title="Are you sure to delete?"
+                                    :width="200"
+                                    @confirm="deleteWildcard(wildcardKey)"
+                                >
+                                    <template #reference>
+                                        <ElButton circle :icon="DeleteFilled" type="danger" />
+                                    </template>
+                                </ElPopconfirm>
+                            </ElButtonGroup>
                         </span>
                     </template>
 
                     <template v-else-if="isWildcardRenaming(wildcardKey)">
                         <span class="edit-buttons">
-                            <ElButton type="success" circle @click.stop="saveRenamingWildcard">
-                                <ElIcon><Check /></ElIcon>
-                            </ElButton>
-                            <ElButton type="info" circle @click.stop="cancelRenamingWildcard">
-                                <ElIcon><Close /></ElIcon>
-                            </ElButton>
+                            <ElButtonGroup>
+                                <ElButton
+                                    :icon="Check"
+                                    type="success"
+                                    circle
+                                    @click.stop="saveRenamingWildcard"
+                                />
+                                <ElButton
+                                    :icon="Close"
+                                    type="info"
+                                    circle
+                                    @click.stop="cancelRenamingWildcard"
+                                />
+                            </ElButtonGroup>
                         </span>
                     </template>
                 </p>
@@ -262,7 +304,7 @@ const sortedWildcard = computed<string[]>(() => Object.keys(wildcardsObj.value).
         </ElCol>
 
         <!-- 編集エリア -->
-        <ElCol :span="16">
+        <ElCol :span="15">
             <PromptTextarea
                 v-show="selectedWildcard"
                 ref="wildcardTextareaRef"
@@ -308,4 +350,3 @@ p.wildcard-selected:hover {
     padding: 2px;
 }
 </style>
-CommaPosition TagCommaPosition

@@ -85,6 +85,12 @@
     "useControlBracket": true,
     "useInputHistory": true,
     "useToggleComment": true,
-    "ElMessage": true
+    "ElMessage": true,
+    "createDynamicPrompt": true,
+    "useClipboardCopy": true,
+    "useControlEnter": true,
+    "useCopyLine": true,
+    "useCutLine": true,
+    "useMoveLine": true
   }
 }

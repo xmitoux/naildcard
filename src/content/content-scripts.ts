@@ -4,7 +4,7 @@
 export function insertPrompt(prompt: string, wildcards: string) {
     const textbox = document.querySelector('textarea');
     if (textbox != null) {
-        const stringToInsert = createPrompt(
+        const stringToInsert = createDynamicPrompt(
             removeCommentLines(prompt),
             parseWildcardsString(removeCommentLines(wildcards)),
         );

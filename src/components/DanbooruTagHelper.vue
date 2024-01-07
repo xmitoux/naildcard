@@ -273,27 +273,7 @@ const categoryColors: Record<number, string> = {
     5: '#E6A23C', // オレンジ メタタグ
 };
 
-const copying = ref(false);
-const copyToClipboard = async () => {
-    copying.value = true;
-
-    try {
-        await navigator.clipboard.writeText(inputTag.value);
-        ElMessage.success({
-            message: 'Copied!',
-            onClose() {
-                copying.value = false;
-            },
-        });
-    } catch {
-        ElMessage.error({
-            message: 'Copy Failed...',
-            onClose() {
-                copying.value = false;
-            },
-        });
-    }
-};
+const { copying, copyToClipboard } = useClipboardCopy();
 
 const deleteHistory = (event: KeyboardEvent) => {
     event.preventDefault();
@@ -372,7 +352,7 @@ const onClick = () => {
             <ElButton
                 :disabled="!inputTag || copying"
                 :icon="copying ? Checked : List"
-                @click="copyToClipboard"
+                @click="copyToClipboard(inputTag)"
             />
         </template>
 

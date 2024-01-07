@@ -22,12 +22,20 @@ const emit = defineEmits<{
 const { inputHistory } = useInputHistory(promptText);
 const { controlBracket, autoBracket } = useControlBracket(promptText);
 const { toggleComment } = useToggleComment(promptText);
+const { copyLine } = useCopyLine(promptText);
+const { cutLine } = useCutLine(promptText);
+const { moveLine } = useMoveLine(promptText);
+const { controlEnter } = useControlEnter(promptText);
 
 const handleKeydown = (event: KeyboardEvent | Event) => {
     const keyboardEvent = event as KeyboardEvent;
     inputHistory(keyboardEvent);
     controlBracket(keyboardEvent);
     toggleComment(keyboardEvent);
+    copyLine(keyboardEvent);
+    cutLine(keyboardEvent);
+    moveLine(keyboardEvent);
+    controlEnter(keyboardEvent);
 };
 
 watch(promptText, () => emit('change', promptText.value));

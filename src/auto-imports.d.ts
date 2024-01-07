@@ -20,8 +20,9 @@ declare global {
   const TAG_HELPER_SUGGESTION_COUNT: typeof import('./constants/settings')['TAG_HELPER_SUGGESTION_COUNT']
   const computed: typeof import('vue')['computed']
   const createApp: typeof import('vue')['createApp']
+  const createDynamicPrompt: typeof import('./content/dynamic-prompts')['createDynamicPrompt']
   const createDynamicPromptButton: typeof import('./content/content-scripts')['createDynamicPromptButton']
-  const createPrompt: typeof import('./content/dynamic-prompts')['createPrompt']
+  const createPrompt: (typeof import('./content/dynamic-prompts'))['createPrompt']
   const customRef: typeof import('vue')['customRef']
   const defineAsyncComponent: typeof import('vue')['defineAsyncComponent']
   const defineComponent: typeof import('vue')['defineComponent']
@@ -29,7 +30,7 @@ declare global {
   const getCurrentInstance: typeof import('vue')['getCurrentInstance']
   const getCurrentScope: typeof import('vue')['getCurrentScope']
   const getGenerateButton: typeof import('./content/content-scripts')['getGenerateButton']
-  const getOriginalGenerateButton: typeof import('./content/content-scripts')['getOriginalGenerateButton']
+  const getOriginalGenerateButton: (typeof import('./content/content-scripts'))['getOriginalGenerateButton']
   const h: typeof import('vue')['h']
   const inject: typeof import('vue')['inject']
   const insertDanbooruTagToTextarea: typeof import('./utils/utils')['insertDanbooruTagToTextarea']
@@ -71,10 +72,15 @@ declare global {
   const triggerRef: typeof import('vue')['triggerRef']
   const unref: typeof import('vue')['unref']
   const useAttrs: typeof import('vue')['useAttrs']
+  const useClipboardCopy: typeof import('./composables/useClipboardCopy')['useClipboardCopy']
   const useControlBracket: typeof import('./composables/useControlBracket')['useControlBracket']
+  const useControlEnter: typeof import('./composables/useControlEnter')['useControlEnter']
+  const useCopyLine: typeof import('./composables/useCopyLine')['useCopyLine']
   const useCssModule: typeof import('vue')['useCssModule']
   const useCssVars: typeof import('vue')['useCssVars']
+  const useCutLine: typeof import('./composables/useCutLine')['useCutLine']
   const useInputHistory: typeof import('./composables/useInputHistory')['useInputHistory']
+  const useMoveLine: typeof import('./composables/useMoveLine')['useMoveLine']
   const useSlots: typeof import('vue')['useSlots']
   const useToggleComment: typeof import('./composables/useToggleComment')['useToggleComment']
   const watch: typeof import('vue')['watch']
@@ -107,8 +113,8 @@ declare module 'vue' {
     readonly TAG_HELPER_SUGGESTION_COUNT: UnwrapRef<typeof import('./constants/settings')['TAG_HELPER_SUGGESTION_COUNT']>
     readonly computed: UnwrapRef<typeof import('vue')['computed']>
     readonly createApp: UnwrapRef<typeof import('vue')['createApp']>
+    readonly createDynamicPrompt: UnwrapRef<typeof import('./content/dynamic-prompts')['createDynamicPrompt']>
     readonly createDynamicPromptButton: UnwrapRef<typeof import('./content/content-scripts')['createDynamicPromptButton']>
-    readonly createPrompt: UnwrapRef<typeof import('./content/dynamic-prompts')['createPrompt']>
     readonly customRef: UnwrapRef<typeof import('vue')['customRef']>
     readonly defineAsyncComponent: UnwrapRef<typeof import('vue')['defineAsyncComponent']>
     readonly defineComponent: UnwrapRef<typeof import('vue')['defineComponent']>
@@ -157,10 +163,15 @@ declare module 'vue' {
     readonly triggerRef: UnwrapRef<typeof import('vue')['triggerRef']>
     readonly unref: UnwrapRef<typeof import('vue')['unref']>
     readonly useAttrs: UnwrapRef<typeof import('vue')['useAttrs']>
+    readonly useClipboardCopy: UnwrapRef<typeof import('./composables/useClipboardCopy')['useClipboardCopy']>
     readonly useControlBracket: UnwrapRef<typeof import('./composables/useControlBracket')['useControlBracket']>
+    readonly useControlEnter: UnwrapRef<typeof import('./composables/useControlEnter')['useControlEnter']>
+    readonly useCopyLine: UnwrapRef<typeof import('./composables/useCopyLine')['useCopyLine']>
     readonly useCssModule: UnwrapRef<typeof import('vue')['useCssModule']>
     readonly useCssVars: UnwrapRef<typeof import('vue')['useCssVars']>
+    readonly useCutLine: UnwrapRef<typeof import('./composables/useCutLine')['useCutLine']>
     readonly useInputHistory: UnwrapRef<typeof import('./composables/useInputHistory')['useInputHistory']>
+    readonly useMoveLine: UnwrapRef<typeof import('./composables/useMoveLine')['useMoveLine']>
     readonly useSlots: UnwrapRef<typeof import('vue')['useSlots']>
     readonly useToggleComment: UnwrapRef<typeof import('./composables/useToggleComment')['useToggleComment']>
     readonly watch: UnwrapRef<typeof import('vue')['watch']>
@@ -186,8 +197,8 @@ declare module '@vue/runtime-core' {
     readonly TAG_HELPER_SUGGESTION_COUNT: UnwrapRef<typeof import('./constants/settings')['TAG_HELPER_SUGGESTION_COUNT']>
     readonly computed: UnwrapRef<typeof import('vue')['computed']>
     readonly createApp: UnwrapRef<typeof import('vue')['createApp']>
+    readonly createDynamicPrompt: UnwrapRef<typeof import('./content/dynamic-prompts')['createDynamicPrompt']>
     readonly createDynamicPromptButton: UnwrapRef<typeof import('./content/content-scripts')['createDynamicPromptButton']>
-    readonly createPrompt: UnwrapRef<typeof import('./content/dynamic-prompts')['createPrompt']>
     readonly customRef: UnwrapRef<typeof import('vue')['customRef']>
     readonly defineAsyncComponent: UnwrapRef<typeof import('vue')['defineAsyncComponent']>
     readonly defineComponent: UnwrapRef<typeof import('vue')['defineComponent']>
@@ -236,10 +247,15 @@ declare module '@vue/runtime-core' {
     readonly triggerRef: UnwrapRef<typeof import('vue')['triggerRef']>
     readonly unref: UnwrapRef<typeof import('vue')['unref']>
     readonly useAttrs: UnwrapRef<typeof import('vue')['useAttrs']>
+    readonly useClipboardCopy: UnwrapRef<typeof import('./composables/useClipboardCopy')['useClipboardCopy']>
     readonly useControlBracket: UnwrapRef<typeof import('./composables/useControlBracket')['useControlBracket']>
+    readonly useControlEnter: UnwrapRef<typeof import('./composables/useControlEnter')['useControlEnter']>
+    readonly useCopyLine: UnwrapRef<typeof import('./composables/useCopyLine')['useCopyLine']>
     readonly useCssModule: UnwrapRef<typeof import('vue')['useCssModule']>
     readonly useCssVars: UnwrapRef<typeof import('vue')['useCssVars']>
+    readonly useCutLine: UnwrapRef<typeof import('./composables/useCutLine')['useCutLine']>
     readonly useInputHistory: UnwrapRef<typeof import('./composables/useInputHistory')['useInputHistory']>
+    readonly useMoveLine: UnwrapRef<typeof import('./composables/useMoveLine')['useMoveLine']>
     readonly useSlots: UnwrapRef<typeof import('vue')['useSlots']>
     readonly useToggleComment: UnwrapRef<typeof import('./composables/useToggleComment')['useToggleComment']>
     readonly watch: UnwrapRef<typeof import('vue')['watch']>

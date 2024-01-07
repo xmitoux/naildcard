@@ -1,7 +1,7 @@
 /**
  * プロンプト生成
  */
-export function createPrompt(template: string, wildcardMap: WildcardMap) {
+export function createDynamicPrompt(template: string, wildcardMap: WildcardMap) {
     let resultPrompt = template;
 
     // 部分コメント#...#の削除
@@ -12,130 +12,163 @@ export function createPrompt(template: string, wildcardMap: WildcardMap) {
 
     resultPrompt = removeHashEnclosedText(template);
 
-    // 重み付け(n::)要素の選択
     const weightRegex = /^(\d+::)?(.+)$/;
-    const selectRandomByWeight = (variants: string[]): string => {
-        if (!variants.length) {
-            // 空のワイルドカードはエラーになるので空文字を返す
-            return '';
+    const selectionRegex = /^(\d*-?\d*)\$\$/;
+
+    // 複数候補と重み付け(n::)を考慮した選択
+    const selectRandomByWeight = (variants: string[], selectionCount: number = 1): string => {
+        const selectedVariants: string[] = [];
+        const variantsClone = [...variants];
+
+        for (let i = 0; i < selectionCount; i++) {
+            const weights = variantsClone.map((variant) => {
+                const match = weightRegex.exec(variant);
+                return match && match[1] ? parseInt(match[1].slice(0, -2), 10) : 1;
+            });
+
+            const sumOfWeights = weights.reduce((sum, weight) => sum + weight, 0);
+            const rand = Math.random() * sumOfWeights;
+            let weightSum = 0;
+
+            for (let j = 0; j < variantsClone.length; j++) {
+                weightSum += weights[j];
+                if (rand < weightSum) {
+                    selectedVariants.push(variantsClone[j].replace(weightRegex, '$2'));
+                    variantsClone.splice(j, 1); // Remove selected variant to prevent re-selection
+                    break;
+                }
+            }
         }
 
-        const weights = variants.map((variant) => {
-            const weightMatch = weightRegex.exec(variant);
-
-            if (weightMatch === null) {
-                return 1;
-            }
-
-            return weightMatch[1] ? parseInt(weightMatch[1].slice(0, -1), 10) : 1;
-        });
-
-        const sumOfWeights = weights.reduce((a, b) => a + b);
-        const randNum = Math.random() * sumOfWeights;
-        let weightSum = 0;
-
-        for (let i = 0; i < weights.length; i++) {
-            weightSum += weights[i];
-            if (randNum < weightSum) {
-                return variants[i].replace(weightRegex, '$2');
-            }
-        }
-
-        // デフォルトの戻り値を設定します
-        // ここでは、variants配列の最初の要素を返すか、空文字列を返すことにします
-        return variants.length > 0 ? variants[0].replace(weightRegex, '$2') : '';
+        return selectedVariants.join(', ');
     };
 
-    // ()の選択
-    const replaceBracketedParams = (bracketedStr: string): string => {
-        // エスケープされた括弧を'^'と'$'に置換する
-        let replacedValue = bracketedStr.replace(/\\\(/g, '^').replace(/\\\)/g, '$');
-
-        let oldValue: string | null = null;
-
-        while (oldValue !== replacedValue) {
-            oldValue = replacedValue;
-            replacedValue = oldValue.replace(/\(([^()]+)\)/g, (_match, inner: string) => {
-                // innerがundefinedの場合に備えて、適切な処理を行います
-                // selectRandomByWeight関数の型に応じて、inner.split('|')の型を調整する必要があります
-                return inner ? selectRandomByWeight(inner.split('|')) : '';
-            });
+    // 候補数選択数(n$$)を解析する
+    const parseSelectionCount = (selectionSpec: string, variantCount: number): number => {
+        const selectionMatch = selectionRegex.exec(selectionSpec);
+        if (!selectionMatch) {
+            return 1;
         }
 
-        // '^', "$"を括弧に戻す
-        const finalStr = replacedValue.replace(/\^/g, '(').replace(/\$/g, ')');
+        const [min, max] = selectionMatch[1]
+            .split('-')
+            .map((n) => (n === '' ? Infinity : parseInt(n)));
 
+        if (max === undefined) {
+            // 固定値指定 (n$$) このときだけmaxがundefinedになる
+            return min;
+        } else {
+            // 範囲指定 (min-max$$)
+            const rangeMin = min === Infinity ? 1 : min;
+            const rangeMax = max === Infinity ? variantCount - 1 : max;
+            return Math.floor(Math.random() * (rangeMax - rangeMin + 1)) + rangeMin;
+        }
+    };
+
+    const replaceVariants = (bracketedStr: string): string => {
+        // ()のエスケープ '\(', '\)' を更にエスケープ
+        const escBracketReplacedValue = bracketedStr
+            .replaceAll('\\(', '\\^')
+            .replaceAll('\\)', '\\$');
+
+        let oldValue: string | null = null;
+        let newValue = escBracketReplacedValue;
+        while (oldValue !== newValue) {
+            oldValue = newValue;
+            newValue = oldValue.replace(/\(([^()]+)\)/g, (_match, inner: string) => {
+                if (!inner) {
+                    return '';
+                }
+                // n$$ を削除して候補の配列を作る
+                const variants = inner.replace(selectionRegex, '').split('|');
+                const variantsCount = variants.length;
+                const selectionCount = parseSelectionCount(inner, variantsCount);
+
+                const selectedVariants = selectRandomByWeight(variants, selectionCount);
+
+                return selectedVariants;
+            });
+        }
+        const finalStr = newValue.replaceAll('\\^', '(').replaceAll('\\$', ')');
         return finalStr;
     };
 
-    resultPrompt = replaceBracketedParams(resultPrompt);
+    resultPrompt = replaceVariants(resultPrompt);
 
     // <>の選択 選択するかしないかの2択 負数の重みで選択しない重み付けが可能
-    const replaceAngleBracketedParams = (str: string) => {
-        const regex = /<[^>]*>/g;
-        const matches = str.match(regex);
+    const onOffVariantsRegexp = /<([^>]*)>/g;
+    const replaceOnOffVariants = (str: string): string => {
+        let oldValue: string | null = null;
+        let newValue = str;
 
-        if (!matches) {
-            return str;
-        }
+        while (oldValue !== newValue) {
+            oldValue = newValue;
+            newValue = oldValue.replace(onOffVariantsRegexp, (_match, inner: string) => {
+                if (!inner) {
+                    return '';
+                }
 
-        const extractString = (input: string) => {
-            // 正規表現を使用して<>内の文字列を抽出
-            const match = input.match(/<([^>]*)>/);
-
-            if (match) {
-                const extractedString = match[1];
+                let variants: string[];
 
                 // 重みが指定されているか確認
-                const weightMatch = extractedString.match(/^(-?\d+)::(.*)$/);
-
-                if (weightMatch) {
-                    // 重みが正の場合はそのまま返す
-                    if (parseInt(weightMatch[1]) >= 0) {
-                        return [extractedString, ' '];
-                    } else {
-                        // 重みが負の場合は半角スペースの方に-1倍して追加して返す
-                        const negativeWeight = parseInt(weightMatch[1]);
-                        const remainingString = weightMatch[2];
-                        const weightedSpace = `${negativeWeight * -1}:: `;
-                        return [remainingString, weightedSpace];
-                    }
+                const weightMatch = inner.match(/^(-?\d+)::(.*)$/);
+                if (!weightMatch) {
+                    // 重みが指定されていない場合はそのまま
+                    variants = [inner, ' '];
                 } else {
-                    // 重みが指定されていない場合は半角スペースを追加して返す
-                    return [extractedString, ' '];
-                }
-            }
-        };
+                    const weight = parseInt(weightMatch[1]);
+                    const variant = weightMatch[2];
 
-        for (const match of matches) {
-            const content = extractString(match) || [];
-            const choice = selectRandomByWeight(content);
-            str = str.replace(match, choice);
+                    if (weight >= 0) {
+                        // 重みが正の場合はそのまま
+                        variants = [inner, ' '];
+                    } else {
+                        // 重みが負の場合は半角スペースの方に重み付け
+                        const negativeWeight = weight * -1;
+                        const weightedSpace = `${negativeWeight}:: `;
+                        variants = [variant, weightedSpace];
+                    }
+                }
+
+                const selectedVariants = selectRandomByWeight(variants);
+
+                return selectedVariants;
+            });
         }
 
-        return str;
+        return newValue;
     };
 
-    resultPrompt = replaceAngleBracketedParams(resultPrompt);
+    resultPrompt = replaceOnOffVariants(resultPrompt);
 
-    Object.keys(wildcardMap).forEach((key) => {
-        const re = new RegExp(`__${key}__`, 'g');
-        resultPrompt = resultPrompt.replace(re, () => {
-            return replaceAngleBracketedParams(
-                replaceBracketedParams(selectRandomByWeight(wildcardMap[key])),
+    const escapeRegExp = (str: string) => {
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $&はマッチした全体文字列を意味します
+    };
+    const replaceWildcards = (prompt: string): string => {
+        let replacedPrompt = prompt;
+
+        Object.keys(wildcardMap).forEach((key) => {
+            const wildcardKeyRegexp = new RegExp(
+                `__(\\d*-?\\d*\\$\\$)?${escapeRegExp(key)}__`,
+                'g',
             );
-        });
-    });
 
+            replacedPrompt = replacedPrompt.replace(wildcardKeyRegexp, (_, inner) => {
+                const variantsCount = wildcardMap[key].length;
+                const selectionCount = parseSelectionCount(inner, variantsCount);
+
+                return replaceOnOffVariants(
+                    replaceVariants(selectRandomByWeight(wildcardMap[key], selectionCount)),
+                );
+            });
+        });
+
+        return replacedPrompt;
+    };
+
+    resultPrompt = replaceWildcards(resultPrompt);
     // nested wildcard
-    Object.keys(wildcardMap).forEach((key) => {
-        const re = new RegExp(`__${key}__`, 'g');
-        resultPrompt = resultPrompt.replace(re, () => {
-            return replaceAngleBracketedParams(
-                replaceBracketedParams(selectRandomByWeight(wildcardMap[key])),
-            );
-        });
-    });
+    resultPrompt = replaceWildcards(resultPrompt);
 
     return resultPrompt;
 }
