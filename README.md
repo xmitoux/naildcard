@@ -67,7 +67,9 @@ NAI用Chrome拡張機能です。dynamic promptsっぽいことができます�
 
 -   `min-max$$`で、選択される候補数の範囲を指定できます。
 -   `apple, banana`, `grape, peach, banana`, `apple, melon, orange, banana`などが生成されます。
--   `min-$$`, `-max$$`のように一方の省略が可能です。`max`省略時の最大値は`候補数 - 1`、`min`省略時の最小値は`1`です。
+-   `min-$$`, `-max$$`のように一方の省略が可能です。
+    -   `max`省略時の最大値は`候補数 - 1`です。
+    -   `min`省略時の最小値は`1`です。
 
 #### ネスト
 
