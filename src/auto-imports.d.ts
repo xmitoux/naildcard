@@ -30,7 +30,6 @@ declare global {
   const getCurrentInstance: typeof import('vue')['getCurrentInstance']
   const getCurrentScope: typeof import('vue')['getCurrentScope']
   const getGenerateButton: typeof import('./content/content-scripts')['getGenerateButton']
-  const getOriginalGenerateButton: (typeof import('./content/content-scripts'))['getOriginalGenerateButton']
   const h: typeof import('vue')['h']
   const inject: typeof import('vue')['inject']
   const insertDanbooruTagToTextarea: typeof import('./utils/utils')['insertDanbooruTagToTextarea']
