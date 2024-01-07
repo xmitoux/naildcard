@@ -3,7 +3,7 @@
 ### ✨追加
 
 -   Dynamic Prompt構文 [Variantsの複数選択](https://github.com/xmitoux/naildcard#複数選択) を追加
--   [ショートカットキー]([https://github.com/xmitoux/naildcard#⌨️ショートカットキー](https://github.com/xmitoux/naildcard?tab=readme-ov-file#%E3%82%B7%E3%83%A7%E3%83%BC%E3%83%88%E3%82%AB%E3%83%83%E3%83%88%E3%82%AD%E3%83%BC))の種類追加
+-   [ショートカットキー](https://github.com/xmitoux/naildcard?tab=readme-ov-file#%E3%82%B7%E3%83%A7%E3%83%BC%E3%83%88%E3%82%AB%E3%83%83%E3%83%88%E3%82%AD%E3%83%BC) の種類追加
 -   Wildcardのコピーボタンを追加
 
 ### 🔄変更
