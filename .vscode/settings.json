@@ -1,6 +1,20 @@
 {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    // ESLint・Prettier 設定
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": "explicit"
-    }
+    },
+    "[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[vue]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "editor.formatOnType": true,
+    "editor.formatOnSave": true,
+
+    // Volar 設定
+    "vue.autoInsert.dotValue": true
 }
