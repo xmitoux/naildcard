@@ -8,6 +8,9 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     DanbooruTagHelper: typeof import('./components/DanbooruTagHelper.vue')['default']
+    ElButton: typeof import('element-plus/es')['ElButton']
+    ElCol: typeof import('element-plus/es')['ElCol']
+    ElRow: typeof import('element-plus/es')['ElRow']
     PromptTextarea: typeof import('./components/PromptTextarea.vue')['default']
     SettingPage: typeof import('./components/SettingPage.vue')['default']
     WildcardManager: typeof import('./components/WildcardManager.vue')['default']

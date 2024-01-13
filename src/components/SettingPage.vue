@@ -10,7 +10,7 @@ import {
     ElTabPane,
     ElTabs,
 } from 'element-plus';
-import { Postcard, Memo, Edit } from '@element-plus/icons-vue';
+import { Postcard, Memo, Edit, MagicStick } from '@element-plus/icons-vue';
 import PromptTextarea from '@/components/PromptTextarea.vue';
 import WildcardManager from '@/components/WildcardManager.vue';
 import DanbooruTagHelper from '@/components/DanbooruTagHelper.vue';
@@ -115,6 +115,39 @@ const onChangeDanbooruTagHistories = (tags: DanbooruTag[]) => {
 
 type TabName = 'Prompt' | 'Wildcard';
 const activeTabName = ref<TabName>('Prompt');
+
+const formatPrompt = () => {
+    if (!currentSettings.value.prompt.trim()) {
+        return;
+    }
+
+    const normalizeCommas = (input: string): string => {
+        // まずは末尾の不要な改行を削除
+        input = input.trim();
+
+        return input
+            .split('\n')
+            .map((line) => {
+                // 各行を処理
+                line = line.trim(); // 末尾の空白を削除
+                if (!line.endsWith(',')) {
+                    line += ','; // 末尾がカンマでなければ、カンマを付加
+                }
+                return line.replace(/\s*,\s*/g, ', '); // 不要なスペースを整理
+            })
+            .join('\n'); // 改行で結合して戻す
+    };
+
+    const removeCommasBeforeCharacters = (input: string): string => {
+        // 指定した文字の直前にあるカンマを削除する
+        return input.replace(/,\s*([}\])>|])/g, '$1');
+    };
+
+    const format1 = normalizeCommas(currentSettings.value.prompt);
+    const format2 = removeCommasBeforeCharacters(format1);
+
+    savePrompt(format2);
+};
 </script>
 
 <template>
@@ -196,6 +229,13 @@ const activeTabName = ref<TabName>('Prompt');
                 :prompt-text-prop="currentSettings.prompt"
                 :rows="20"
                 @change="savePrompt"
+            />
+
+            <ElButton
+                :icon="MagicStick"
+                type="primary"
+                style="margin-top: 5px"
+                @click="formatPrompt"
             />
         </ElTabPane>
 
