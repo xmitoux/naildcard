@@ -148,6 +148,8 @@ const formatPrompt = () => {
 
     savePrompt(format2);
 };
+
+const searchOnlyGeneralTags = ref(true);
 </script>
 
 <template>
@@ -179,6 +181,10 @@ const formatPrompt = () => {
                 />
             </ElSelect>
         </ElFormItem>
+
+        <ElFormItem label="Search Only General Tags">
+            <ElSwitch v-model="searchOnlyGeneralTags" />
+        </ElFormItem>
     </ElForm>
 
     <ElForm @submit.prevent>
@@ -187,6 +193,7 @@ const formatPrompt = () => {
                 <DanbooruTagHelper
                     ref="danbooruTagHelperRef"
                     :saved-tag-histories="currentSettings.danbooruTagHistories"
+                    :options="{ searchOnlyGeneralTags }"
                     @change-histories="onChangeDanbooruTagHistories"
                     @select="onSelectDanbooruTag"
                 />
