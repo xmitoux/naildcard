@@ -160,6 +160,10 @@ const onSendDanbooruTag = (tag: string, forceMoveFocus: boolean) => {
         insertDanbooruTagToWildcard(forceMoveFocus);
     }
 };
+
+const onIntelliSense = () => {
+    danbooruTagHelperRef.value?.focus();
+};
 </script>
 
 <template>
@@ -247,6 +251,7 @@ const onSendDanbooruTag = (tag: string, forceMoveFocus: boolean) => {
                 :prompt-text-prop="currentSettings.prompt"
                 :rows="20"
                 @change="savePrompt"
+                @intellisense="onIntelliSense"
             />
 
             <ElButton
