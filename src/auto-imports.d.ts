@@ -10,6 +10,7 @@ declare global {
   const ASPECT_RATIO_BUTTON: typeof import('./constants/nai')['ASPECT_RATIO_BUTTON']
   const DANBOORU_CSV: typeof import('./constants/danbooru')['DANBOORU_CSV']
   const DANBOORU_URL: typeof import('./constants/danbooru')['DANBOORU_URL']
+  const DanbooruTagCategory: typeof import('./constants/enums')['DanbooruTagCategory']
   const EffectScope: typeof import('vue')['EffectScope']
   const ElMessage: typeof import('element-plus/es')['ElMessage']
   const GENERATE_BUTTON_TEXTS_EN: typeof import('./constants/nai')['GENERATE_BUTTON_TEXTS_EN']

@@ -78,7 +78,7 @@ const loadDanbooruTags = (): DanbooruTag[] => {
 
                     case 'category':
                     case 'postsCount': {
-                        const num = parseInt(data);
+                        const num = parseInt(data) as DanbooruTagCategory;
                         if (!isNaN(num)) {
                             obj[header] = num;
                         }
@@ -206,7 +206,8 @@ const fuzzySearch = (queryString: string, callback: SearchCallBack) => {
                 return resultTags;
             }, [])
             // フィルタ結果を全件出すと重いので削る
-            .slice(0, TAG_HELPER_SUGGESTION_COUNT - 1);
+            .slice(0, TAG_HELPER_SUGGESTION_COUNT - 1)
+            .filter((tag) => tag.category === 0);
 
         callback(results);
     }, 1);
@@ -230,7 +231,8 @@ const normalSearch = (queryString: string, callback: SearchCallBack) => {
                 return resultTags;
             }, [])
             // フィルタ結果を全件出すと重いので削る
-            .slice(0, TAG_HELPER_SUGGESTION_COUNT - 1);
+            .slice(0, TAG_HELPER_SUGGESTION_COUNT - 1)
+            .filter((tag) => tag.category === 0);
 
         callback(results);
     }, 1);
@@ -265,7 +267,7 @@ const formatPostsCountSuffix = (num: number): string => {
     }
 };
 
-const categoryColors: Record<number, string> = {
+const categoryColors: Record<DanbooruTagCategory, string> = {
     0: '#2BBAFF', // 青 一般タグ
     1: '#FF7A7B', // 赤 絵師タグ
     3: '#BC83FF', // 紫 版権タグ
@@ -381,8 +383,5 @@ const onClick = () => {
     overflow: hidden;
     text-overflow: ellipsis;
     flex-grow: 1; /* 左側のspanが可能な限りスペースを占めるようにする */
-}
-
-.posts-count {
 }
 </style>
