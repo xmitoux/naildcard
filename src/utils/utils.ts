@@ -14,7 +14,7 @@ export function parseWildcardsString(wildcardsStr: string) {
                 output[currentKey].push(line);
             }
             return;
-        } else if (line.endsWith(':')) {
+        } else if (!line.startsWith(':') && line.endsWith(':')) {
             // This is a key
             currentKey = line.slice(0, -1); // Remove the trailing :
             output[currentKey] = [];

@@ -92,7 +92,7 @@ const addWildcard = (addingWildcardKey: string): boolean => {
     return true;
 };
 
-const invalidWildcardNameChars = ['(', ')', '<', '>', '$', '#', '__'];
+const invalidWildcardNameChars = ['(', ')', '<', '>', '$', '#', '__', ':'];
 const validateWildcardName = (name: string): boolean => {
     if (!name) {
         return false;
@@ -121,12 +121,21 @@ const deleteWildcard = (wildcardKey: string) => {
 };
 
 const editWildcardString = (changedWildcardString: string) => {
-    if (selectedWildcard.value) {
+    if (!selectedWildcard.value) {
         // ワイルドカード削除不具合対応
         // (削除後はselectedWildcardがないので更新しない)
-        wildcardsObj.value[selectedWildcard.value] = changedWildcardString.split('\n');
-        saveWildcard();
+        return;
     }
+
+    const wildcardStrings = changedWildcardString.split('\n');
+
+    if (wildcardStrings.some((str) => str.endsWith(':'))) {
+        ElMessage.error("Variants ending with ':' are not allowed! Changes will not be saved!");
+        return;
+    }
+
+    wildcardsObj.value[selectedWildcard.value] = wildcardStrings;
+    saveWildcard();
 };
 
 const saveWildcard = () => {
