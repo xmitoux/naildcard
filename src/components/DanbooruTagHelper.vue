@@ -8,7 +8,12 @@ const props = defineProps<{
         searchOnlyGeneralTags: boolean;
     };
 }>();
-const emit = defineEmits<{ select: [tag: string]; changeHistories: [tags: DanbooruTag[]] }>();
+
+const emit = defineEmits<{
+    select: [tag: string];
+    changeHistories: [tags: DanbooruTag[]];
+    send: [tag: string, moveFocus: boolean];
+}>();
 
 const fuzzySearchMode = ref(true);
 
@@ -324,6 +329,12 @@ const onClick = () => {
         autocomleteRef.value!.suggestions = selectedTagHistories.value;
     }
 };
+
+const sendPromptArea = (moveCaret: boolean = false) => {
+    if (inputTag.value.trim()) {
+        emit('send', inputTag.value, moveCaret);
+    }
+};
 </script>
 
 <template>
@@ -342,6 +353,8 @@ const onClick = () => {
         @click="onClick"
         @clear="clearTag"
         @input="emit('select', '')"
+        @keyup.enter.exact.prevent="sendPromptArea(true)"
+        @keyup.shift.enter.prevent="sendPromptArea()"
         @keydown.ctrl.delete="deleteHistory"
         @keydown.tab="keydownTab"
         @select="selectTag"
