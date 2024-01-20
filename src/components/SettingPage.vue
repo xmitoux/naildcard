@@ -128,6 +128,10 @@ const formatPrompt = () => {
         return input
             .split('\n')
             .map((line) => {
+                if (!line) {
+                    return '';
+                }
+
                 // 各行を処理
                 line = line.trim(); // 末尾の空白を削除
                 if (!line.endsWith(',')) {
