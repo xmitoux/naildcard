@@ -2,8 +2,18 @@
 import { ElAutocomplete, ElButton, ElCheckbox } from 'element-plus';
 import { List, Checked } from '@element-plus/icons-vue';
 
-const props = defineProps<{ savedTagHistories: string }>();
-const emit = defineEmits<{ select: [tag: string]; changeHistories: [tags: DanbooruTag[]] }>();
+const props = defineProps<{
+    savedTagHistories: string;
+    options: {
+        searchOnlyGeneralTags: boolean;
+    };
+}>();
+
+const emit = defineEmits<{
+    select: [tag: string];
+    changeHistories: [tags: DanbooruTag[]];
+    send: [tag: string, moveFocus: boolean];
+}>();
 
 const fuzzySearchMode = ref(true);
 
@@ -78,7 +88,7 @@ const loadDanbooruTags = (): DanbooruTag[] => {
 
                     case 'category':
                     case 'postsCount': {
-                        const num = parseInt(data);
+                        const num = parseInt(data) as DanbooruTagCategory;
                         if (!isNaN(num)) {
                             obj[header] = num;
                         }
@@ -116,6 +126,7 @@ const loadDanbooruTags = (): DanbooruTag[] => {
 type FilteredDanbooruTag = DanbooruTag & { isActual: boolean };
 type SearchCallBack = (results: DanbooruTag[] | FilteredDanbooruTag[]) => void;
 
+let timeout: ReturnType<typeof setTimeout>;
 const fetchSuggestions = (queryString: string, callback: SearchCallBack) => {
     if (queryString === '') {
         // クエリを空欄にした直後はtrigger-on-focusが動いて全件検索してしまうので空を返す
@@ -123,117 +134,113 @@ const fetchSuggestions = (queryString: string, callback: SearchCallBack) => {
         return;
     }
 
-    fuzzySearchMode.value
-        ? fuzzySearch(queryString, callback)
-        : normalSearch(queryString, callback);
-};
+    let results: FilteredDanbooruTag[] = fuzzySearchMode.value
+        ? fuzzySearch(queryString)
+        : normalSearch(queryString);
 
-let timeout: ReturnType<typeof setTimeout>;
+    // 結果を全件出すと重いので削る
+    results = results.slice(0, TAG_HELPER_SUGGESTION_COUNT - 1);
 
-const fuzzySearch = (queryString: string, callback: SearchCallBack) => {
-    if (!queryString) {
-        callback([]);
-        return;
+    if (props.options.searchOnlyGeneralTags) {
+        results = results.filter((tag) => tag.category === 0);
     }
+
     // 部分一致検索が遅いので非同期で実行して画面を止めない
     clearTimeout(timeout);
     timeout = setTimeout(() => {
-        const results: FilteredDanbooruTag[] = danbooruTags.value
-            .reduce((resultTags: FilteredDanbooruTag[], tag) => {
-                const isMaybeWord = tag.maybeNames.some(
-                    (maybeName) => maybeName.indexOf(queryString) === 0,
-                );
-
-                if (queryString.includes(' ')) {
-                    // 検索クエリにスペースがある場合はAND検索
-
-                    // 検索クエリのすべての単語がタグの各単語に前方一致するか判定する関数
-                    const doesQueryPartialMatch = (query: string[], target: string[]): boolean => {
-                        const targetWordCounts = target.reduce(
-                            (countMap, word) => {
-                                countMap[word] = (countMap[word] || 0) + 1;
-                                return countMap;
-                            },
-                            {} as Record<string, number>,
-                        );
-
-                        for (let word of query) {
-                            let isMatch = false;
-                            for (let targetWord of Object.keys(targetWordCounts)) {
-                                if (
-                                    targetWord.startsWith(word) &&
-                                    targetWordCounts[targetWord] > 0
-                                ) {
-                                    targetWordCounts[targetWord]--;
-                                    isMatch = true;
-                                    break;
-                                }
-                            }
-                            if (!isMatch) return false;
-                        }
-                        return true;
-                    };
-
-                    const tagWords = tag.name.split(' ');
-                    const queryWords = queryString.split(' ');
-
-                    if (tagWords.length >= 2 && doesQueryPartialMatch(queryWords, tagWords)) {
-                        resultTags.push({ ...tag, isActual: true });
-                    } else if (isMaybeWord) {
-                        resultTags.push({ ...tag, isActual: false });
-                    }
-                } else {
-                    // 検索クエリにスペースがない場合は前方部分一致検索
-
-                    // クエリの各文字がタグ文字列内の何処かに順番に存在するかチェック
-                    const doesQueryMatch = (query: string, tagString: string): boolean => {
-                        let queryIndex = 0;
-                        for (let i = 0; i < tagString.length && queryIndex < query.length; i++) {
-                            if (tagString[i] === query[queryIndex]) {
-                                queryIndex++;
-                            }
-                        }
-                        return queryIndex === query.length;
-                    };
-
-                    if (doesQueryMatch(queryString, tag.name)) {
-                        resultTags.push({ ...tag, isActual: true });
-                    } else if (isMaybeWord) {
-                        resultTags.push({ ...tag, isActual: false });
-                    }
-                }
-
-                return resultTags;
-            }, [])
-            // フィルタ結果を全件出すと重いので削る
-            .slice(0, TAG_HELPER_SUGGESTION_COUNT - 1);
-
         callback(results);
     }, 1);
 };
 
-const normalSearch = (queryString: string, callback: SearchCallBack) => {
-    // 非同期で実行して画面を止めない
-    clearTimeout(timeout);
-    timeout = setTimeout(() => {
-        const results: FilteredDanbooruTag[] = danbooruTags.value
-            .reduce((resultTags: FilteredDanbooruTag[], tag) => {
-                const isMaybeWord = tag.maybeNames.some(
-                    (maybeName) => maybeName.indexOf(queryString) === 0,
-                );
+const fuzzySearch = (queryString: string): FilteredDanbooruTag[] => {
+    const results: FilteredDanbooruTag[] = danbooruTags.value.reduce(
+        (resultTags: FilteredDanbooruTag[], tag) => {
+            const isMaybeWord = tag.maybeNames.some(
+                (maybeName) => maybeName.indexOf(queryString) === 0,
+            );
 
-                if (tag.name.indexOf(queryString) === 0) {
+            if (queryString.includes(' ')) {
+                // 検索クエリにスペースがある場合はAND検索
+
+                // 検索クエリのすべての単語がタグの各単語に前方一致するか判定する関数
+                const doesQueryPartialMatch = (query: string[], target: string[]): boolean => {
+                    const targetWordCounts = target.reduce(
+                        (countMap, word) => {
+                            countMap[word] = (countMap[word] || 0) + 1;
+                            return countMap;
+                        },
+                        {} as Record<string, number>,
+                    );
+
+                    for (let word of query) {
+                        let isMatch = false;
+                        for (let targetWord of Object.keys(targetWordCounts)) {
+                            if (targetWord.startsWith(word) && targetWordCounts[targetWord] > 0) {
+                                targetWordCounts[targetWord]--;
+                                isMatch = true;
+                                break;
+                            }
+                        }
+                        if (!isMatch) return false;
+                    }
+                    return true;
+                };
+
+                const tagWords = tag.name.split(' ');
+                const queryWords = queryString.split(' ');
+
+                if (tagWords.length >= 2 && doesQueryPartialMatch(queryWords, tagWords)) {
                     resultTags.push({ ...tag, isActual: true });
                 } else if (isMaybeWord) {
                     resultTags.push({ ...tag, isActual: false });
                 }
-                return resultTags;
-            }, [])
-            // フィルタ結果を全件出すと重いので削る
-            .slice(0, TAG_HELPER_SUGGESTION_COUNT - 1);
+            } else {
+                // 検索クエリにスペースがない場合は前方部分一致検索
 
-        callback(results);
-    }, 1);
+                // クエリの各文字がタグ文字列内の何処かに順番に存在するかチェック
+                const doesQueryMatch = (query: string, tagString: string): boolean => {
+                    let queryIndex = 0;
+                    for (let i = 0; i < tagString.length && queryIndex < query.length; i++) {
+                        if (tagString[i] === query[queryIndex]) {
+                            queryIndex++;
+                        }
+                    }
+                    return queryIndex === query.length;
+                };
+
+                if (doesQueryMatch(queryString, tag.name)) {
+                    resultTags.push({ ...tag, isActual: true });
+                } else if (isMaybeWord) {
+                    resultTags.push({ ...tag, isActual: false });
+                }
+            }
+
+            return resultTags;
+        },
+        [],
+    );
+
+    return results;
+};
+
+const normalSearch = (queryString: string): FilteredDanbooruTag[] => {
+    const results: FilteredDanbooruTag[] = danbooruTags.value.reduce(
+        (resultTags: FilteredDanbooruTag[], tag) => {
+            const isMaybeWord = tag.maybeNames.some(
+                (maybeName) => maybeName.indexOf(queryString) === 0,
+            );
+
+            if (tag.name.indexOf(queryString) === 0) {
+                resultTags.push({ ...tag, isActual: true });
+            } else if (isMaybeWord) {
+                resultTags.push({ ...tag, isActual: false });
+            }
+            return resultTags;
+        },
+        [],
+    );
+
+    return results;
 };
 
 // オートコンプリートに出すタグ名を取得する
@@ -265,7 +272,7 @@ const formatPostsCountSuffix = (num: number): string => {
     }
 };
 
-const categoryColors: Record<number, string> = {
+const categoryColors: Record<DanbooruTagCategory, string> = {
     0: '#2BBAFF', // 青 一般タグ
     1: '#FF7A7B', // 赤 絵師タグ
     3: '#BC83FF', // 紫 版権タグ
@@ -322,6 +329,12 @@ const onClick = () => {
         autocomleteRef.value!.suggestions = selectedTagHistories.value;
     }
 };
+
+const sendPromptArea = (moveCaret: boolean = false) => {
+    if (inputTag.value.trim()) {
+        emit('send', inputTag.value, moveCaret);
+    }
+};
 </script>
 
 <template>
@@ -340,6 +353,8 @@ const onClick = () => {
         @click="onClick"
         @clear="clearTag"
         @input="emit('select', '')"
+        @keyup.enter.exact.prevent="sendPromptArea(true)"
+        @keyup.shift.enter.prevent="sendPromptArea()"
         @keydown.ctrl.delete="deleteHistory"
         @keydown.tab="keydownTab"
         @select="selectTag"
@@ -381,8 +396,5 @@ const onClick = () => {
     overflow: hidden;
     text-overflow: ellipsis;
     flex-grow: 1; /* 左側のspanが可能な限りスペースを占めるようにする */
-}
-
-.posts-count {
 }
 </style>

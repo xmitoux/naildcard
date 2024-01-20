@@ -91,6 +91,7 @@
     "useCutLine": true,
     "useMoveLine": true,
     "useControlEnter": true,
-    "createDynamicPromptButton": true
+    "createDynamicPromptButton": true,
+    "DanbooruTagCategory": true
   }
 }

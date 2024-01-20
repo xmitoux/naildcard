@@ -70,30 +70,30 @@ const commaInsertPositions: TagCommaPosition[] = [
     'None',
 ];
 
-const insertDanbooruTagToPrompt = () => {
+const insertDanbooruTagToPrompt = (forceMoveFocus: boolean = false) => {
     insertDanbooruTagToTextarea(
         formatedDanbooruTag.value,
         promptTextareaRef.value,
         (tagInsertedPrompt: string) => (currentSettings.value.prompt = tagInsertedPrompt),
-        moveFocusAfterTagInsertion.value,
+        forceMoveFocus || moveFocusAfterTagInsertion.value,
         commaInsertPosition.value,
     );
-    afterInsertionDanbooruTag();
+    afterInsertionDanbooruTag(forceMoveFocus);
 };
 
-const insertDanbooruTagToWildcard = () => {
+const insertDanbooruTagToWildcard = (forceMoveFocus: boolean = false) => {
     wildcardManagerRef.value?.insertDanbooruTag(
         formatedDanbooruTag.value,
-        moveFocusAfterTagInsertion.value,
+        forceMoveFocus || moveFocusAfterTagInsertion.value,
         commaInsertPosition.value,
     );
-    afterInsertionDanbooruTag();
+    afterInsertionDanbooruTag(forceMoveFocus);
 };
 
-const afterInsertionDanbooruTag = () => {
+const afterInsertionDanbooruTag = (forceMoveFocus: boolean) => {
     danbooruTagHelperRef.value?.clearTag();
 
-    if (!moveFocusAfterTagInsertion.value) {
+    if (!forceMoveFocus && !moveFocusAfterTagInsertion.value) {
         danbooruTagHelperRef.value?.focus();
     }
 };
@@ -148,6 +148,22 @@ const formatPrompt = () => {
 
     savePrompt(format2);
 };
+
+const searchOnlyGeneralTags = ref(true);
+
+const onSendDanbooruTag = (tag: string, forceMoveFocus: boolean) => {
+    onSelectDanbooruTag(tag);
+
+    if (activeTabName.value === 'Prompt') {
+        insertDanbooruTagToPrompt(forceMoveFocus);
+    } else {
+        insertDanbooruTagToWildcard(forceMoveFocus);
+    }
+};
+
+const onIntelliSense = () => {
+    danbooruTagHelperRef.value?.focus();
+};
 </script>
 
 <template>
@@ -179,6 +195,10 @@ const formatPrompt = () => {
                 />
             </ElSelect>
         </ElFormItem>
+
+        <ElFormItem label="Search Only General Tags">
+            <ElSwitch v-model="searchOnlyGeneralTags" />
+        </ElFormItem>
     </ElForm>
 
     <ElForm @submit.prevent>
@@ -187,8 +207,10 @@ const formatPrompt = () => {
                 <DanbooruTagHelper
                     ref="danbooruTagHelperRef"
                     :saved-tag-histories="currentSettings.danbooruTagHistories"
+                    :options="{ searchOnlyGeneralTags }"
                     @change-histories="onChangeDanbooruTagHistories"
                     @select="onSelectDanbooruTag"
+                    @send="onSendDanbooruTag"
                 />
 
                 <template v-if="activeTabName === 'Prompt'">
@@ -198,7 +220,7 @@ const formatPrompt = () => {
                         type="primary"
                         style="width: 200px"
                         v-show="activeTabName === 'Prompt'"
-                        @click="insertDanbooruTagToPrompt"
+                        @click="insertDanbooruTagToPrompt()"
                     >
                         Insert Tag to Prompt
                     </ElButton>
@@ -210,7 +232,7 @@ const formatPrompt = () => {
                         type="success"
                         style="width: 200px"
                         v-show="activeTabName === 'Wildcard'"
-                        @click="insertDanbooruTagToWildcard"
+                        @click="insertDanbooruTagToWildcard()"
                     >
                         Insert Tag to Wildcard
                     </ElButton>
@@ -229,6 +251,7 @@ const formatPrompt = () => {
                 :prompt-text-prop="currentSettings.prompt"
                 :rows="20"
                 @change="savePrompt"
+                @intellisense="onIntelliSense"
             />
 
             <ElButton

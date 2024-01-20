@@ -17,6 +17,7 @@ watchEffect(() => (promptText.value = props.promptTextProp));
 
 const emit = defineEmits<{
     change: [changedPrompt: string];
+    intellisense: [];
 }>();
 
 const { inputHistory } = useInputHistory(promptText);
@@ -50,6 +51,7 @@ watch(promptText, () => emit('change', promptText.value));
         :rows="props.rows"
         @change="emit('change', promptText)"
         @keydown="handleKeydown"
+        @keydown.ctrl.space.prevent="emit('intellisense')"
         @beforeinput="autoBracket"
     />
 </template>
