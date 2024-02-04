@@ -8,8 +8,13 @@ declare global {
   const ACTION_GET_SETTINGS: typeof import('./constants/chrome')['ACTION_GET_SETTINGS']
   const ACTION_UPDATE_SETTINGS: typeof import('./constants/chrome')['ACTION_UPDATE_SETTINGS']
   const ASPECT_RATIO_BUTTON: typeof import('./constants/nai')['ASPECT_RATIO_BUTTON']
+  const BUTTON_ID_DICE_BUTTON: typeof import('./constants/nai')['BUTTON_ID_DICE_BUTTON']
+  const BUTTON_TEXT_GENERATE_EN: typeof import('./constants/nai')['BUTTON_TEXT_GENERATE_EN']
+  const BUTTON_TEXT_GENERATE_JA: typeof import('./constants/nai')['BUTTON_TEXT_GENERATE_JA']
   const DANBOORU_CSV: typeof import('./constants/danbooru')['DANBOORU_CSV']
   const DANBOORU_URL: typeof import('./constants/danbooru')['DANBOORU_URL']
+  const DICE_BUTTON_ID: typeof import('./constants/nai')['DICE_BUTTON_ID']
+  const DICE_BUTTON_TEXT: typeof import('./constants/nai')['DICE_BUTTON_TEXT']
   const DanbooruTagCategory: typeof import('./constants/enums')['DanbooruTagCategory']
   const EffectScope: typeof import('vue')['EffectScope']
   const ElMessage: typeof import('element-plus/es')['ElMessage']
@@ -19,6 +24,7 @@ declare global {
   const NEGATIVE_PROMPT_BUTTON_TEXT_EN: typeof import('./constants/nai')['NEGATIVE_PROMPT_BUTTON_TEXT_EN']
   const NEGATIVE_PROMPT_BUTTON_TEXT_JP: typeof import('./constants/nai')['NEGATIVE_PROMPT_BUTTON_TEXT_JP']
   const TAG_HELPER_SUGGESTION_COUNT: typeof import('./constants/settings')['TAG_HELPER_SUGGESTION_COUNT']
+  const addDiceButton: typeof import('./content/addDiceButton')['addDiceButton']
   const computed: typeof import('vue')['computed']
   const createApp: typeof import('vue')['createApp']
   const createDynamicPrompt: typeof import('./content/dynamic-prompts')['createDynamicPrompt']
@@ -28,9 +34,12 @@ declare global {
   const defineAsyncComponent: typeof import('vue')['defineAsyncComponent']
   const defineComponent: typeof import('vue')['defineComponent']
   const effectScope: typeof import('vue')['effectScope']
+  const generateButton: typeof import('./content/setupContents')['generateButton']
+  const generatedImage: typeof import('./content/setupContents')['generatedImage']
   const getCurrentInstance: typeof import('vue')['getCurrentInstance']
   const getCurrentScope: typeof import('vue')['getCurrentScope']
   const getGenerateButton: typeof import('./content/content-scripts')['getGenerateButton']
+  const getStorage: typeof import('./utils/chrome-api')['getStorage']
   const h: typeof import('vue')['h']
   const inject: typeof import('vue')['inject']
   const insertDanbooruTagToTextarea: typeof import('./utils/utils')['insertDanbooruTagToTextarea']
@@ -55,6 +64,7 @@ declare global {
   const onServerPrefetch: typeof import('vue')['onServerPrefetch']
   const onUnmounted: typeof import('vue')['onUnmounted']
   const onUpdated: typeof import('vue')['onUpdated']
+  const overlay: typeof import('./content/setupContents')['overlay']
   const parseWildcardsString: typeof import('./utils/utils')['parseWildcardsString']
   const provide: typeof import('vue')['provide']
   const reactive: typeof import('vue')['reactive']
@@ -62,6 +72,9 @@ declare global {
   const ref: typeof import('vue')['ref']
   const removeCommentLines: typeof import('./content/dynamic-prompts')['removeCommentLines']
   const resolveComponent: typeof import('vue')['resolveComponent']
+  const saveButton: typeof import('./content/setupContents')['saveButton']
+  const saveStorage: typeof import('./utils/chrome-api')['saveStorage']
+  const setupContents: typeof import('./content/setupContents')['setupContents']
   const shallowReactive: typeof import('vue')['shallowReactive']
   const shallowReadonly: typeof import('vue')['shallowReadonly']
   const shallowRef: typeof import('vue')['shallowRef']
@@ -71,6 +84,8 @@ declare global {
   const toValue: typeof import('vue')['toValue']
   const triggerRef: typeof import('vue')['triggerRef']
   const unref: typeof import('vue')['unref']
+  const upscaleButton: typeof import('./content/setupContents')['upscaleButton']
+  const upscaleButtonText: typeof import('./content/setupContents')['upscaleButtonText']
   const useAttrs: typeof import('vue')['useAttrs']
   const useClipboardCopy: typeof import('./composables/useClipboardCopy')['useClipboardCopy']
   const useControlBracket: typeof import('./composables/useControlBracket')['useControlBracket']
@@ -83,6 +98,7 @@ declare global {
   const useMoveLine: typeof import('./composables/useMoveLine')['useMoveLine']
   const useSlots: typeof import('vue')['useSlots']
   const useToggleComment: typeof import('./composables/useToggleComment')['useToggleComment']
+  const variationButton: typeof import('./content/setupContents')['variationButton']
   const watch: typeof import('vue')['watch']
   const watchEffect: typeof import('vue')['watchEffect']
   const watchPostEffect: typeof import('vue')['watchPostEffect']
@@ -101,31 +117,33 @@ declare module 'vue' {
     readonly ACTION_GET_SETTINGS: UnwrapRef<typeof import('./constants/chrome')['ACTION_GET_SETTINGS']>
     readonly ACTION_UPDATE_SETTINGS: UnwrapRef<typeof import('./constants/chrome')['ACTION_UPDATE_SETTINGS']>
     readonly ASPECT_RATIO_BUTTON: UnwrapRef<typeof import('./constants/nai')['ASPECT_RATIO_BUTTON']>
+    readonly BUTTON_TEXT_GENERATE_EN: UnwrapRef<typeof import('./constants/nai')['BUTTON_TEXT_GENERATE_EN']>
+    readonly BUTTON_TEXT_GENERATE_JA: UnwrapRef<typeof import('./constants/nai')['BUTTON_TEXT_GENERATE_JA']>
     readonly DANBOORU_CSV: UnwrapRef<typeof import('./constants/danbooru')['DANBOORU_CSV']>
     readonly DANBOORU_URL: UnwrapRef<typeof import('./constants/danbooru')['DANBOORU_URL']>
+    readonly DICE_BUTTON_ID: UnwrapRef<typeof import('./constants/nai')['DICE_BUTTON_ID']>
+    readonly DICE_BUTTON_TEXT: UnwrapRef<typeof import('./constants/nai')['DICE_BUTTON_TEXT']>
     readonly EffectScope: UnwrapRef<typeof import('vue')['EffectScope']>
-    readonly GENERATE_BUTTON_TEXTS_EN: UnwrapRef<typeof import('./constants/nai')['GENERATE_BUTTON_TEXTS_EN']>
-    readonly GENERATE_BUTTON_TEXTS_JP: UnwrapRef<typeof import('./constants/nai')['GENERATE_BUTTON_TEXTS_JP']>
+    readonly ElMessage: UnwrapRef<typeof import('element-plus/es')['ElMessage']>
     readonly NAI_URL: UnwrapRef<typeof import('./constants/nai')['NAI_URL']>
     readonly NEGATIVE_PROMPT_BUTTON_TEXT_EN: UnwrapRef<typeof import('./constants/nai')['NEGATIVE_PROMPT_BUTTON_TEXT_EN']>
     readonly NEGATIVE_PROMPT_BUTTON_TEXT_JP: UnwrapRef<typeof import('./constants/nai')['NEGATIVE_PROMPT_BUTTON_TEXT_JP']>
     readonly TAG_HELPER_SUGGESTION_COUNT: UnwrapRef<typeof import('./constants/settings')['TAG_HELPER_SUGGESTION_COUNT']>
+    readonly addDiceButton: UnwrapRef<typeof import('./content/addDiceButton')['addDiceButton']>
     readonly computed: UnwrapRef<typeof import('vue')['computed']>
     readonly createApp: UnwrapRef<typeof import('vue')['createApp']>
     readonly createDynamicPrompt: UnwrapRef<typeof import('./content/dynamic-prompts')['createDynamicPrompt']>
-    readonly createDynamicPromptButton: UnwrapRef<typeof import('./content/content-scripts')['createDynamicPromptButton']>
     readonly customRef: UnwrapRef<typeof import('vue')['customRef']>
     readonly defineAsyncComponent: UnwrapRef<typeof import('vue')['defineAsyncComponent']>
     readonly defineComponent: UnwrapRef<typeof import('vue')['defineComponent']>
     readonly effectScope: UnwrapRef<typeof import('vue')['effectScope']>
+    readonly generateButton: UnwrapRef<typeof import('./content/setupContents')['generateButton']>
     readonly getCurrentInstance: UnwrapRef<typeof import('vue')['getCurrentInstance']>
     readonly getCurrentScope: UnwrapRef<typeof import('vue')['getCurrentScope']>
-    readonly getGenerateButton: UnwrapRef<typeof import('./content/content-scripts')['getGenerateButton']>
+    readonly getStorage: UnwrapRef<typeof import('./utils/chrome-api')['getStorage']>
     readonly h: UnwrapRef<typeof import('vue')['h']>
     readonly inject: UnwrapRef<typeof import('vue')['inject']>
     readonly insertDanbooruTagToTextarea: UnwrapRef<typeof import('./utils/utils')['insertDanbooruTagToTextarea']>
-    readonly insertPrompt: UnwrapRef<typeof import('./content/content-scripts')['insertPrompt']>
-    readonly isNegativePromptVisible: UnwrapRef<typeof import('./content/content-scripts')['isNegativePromptVisible']>
     readonly isProxy: UnwrapRef<typeof import('vue')['isProxy']>
     readonly isReactive: UnwrapRef<typeof import('vue')['isReactive']>
     readonly isReadonly: UnwrapRef<typeof import('vue')['isReadonly']>
@@ -152,6 +170,8 @@ declare module 'vue' {
     readonly ref: UnwrapRef<typeof import('vue')['ref']>
     readonly removeCommentLines: UnwrapRef<typeof import('./content/dynamic-prompts')['removeCommentLines']>
     readonly resolveComponent: UnwrapRef<typeof import('vue')['resolveComponent']>
+    readonly saveStorage: UnwrapRef<typeof import('./utils/chrome-api')['saveStorage']>
+    readonly setupContents: UnwrapRef<typeof import('./content/setupContents')['setupContents']>
     readonly shallowReactive: UnwrapRef<typeof import('vue')['shallowReactive']>
     readonly shallowReadonly: UnwrapRef<typeof import('vue')['shallowReadonly']>
     readonly shallowRef: UnwrapRef<typeof import('vue')['shallowRef']>
@@ -184,31 +204,33 @@ declare module '@vue/runtime-core' {
     readonly ACTION_GET_SETTINGS: UnwrapRef<typeof import('./constants/chrome')['ACTION_GET_SETTINGS']>
     readonly ACTION_UPDATE_SETTINGS: UnwrapRef<typeof import('./constants/chrome')['ACTION_UPDATE_SETTINGS']>
     readonly ASPECT_RATIO_BUTTON: UnwrapRef<typeof import('./constants/nai')['ASPECT_RATIO_BUTTON']>
+    readonly BUTTON_TEXT_GENERATE_EN: UnwrapRef<typeof import('./constants/nai')['BUTTON_TEXT_GENERATE_EN']>
+    readonly BUTTON_TEXT_GENERATE_JA: UnwrapRef<typeof import('./constants/nai')['BUTTON_TEXT_GENERATE_JA']>
     readonly DANBOORU_CSV: UnwrapRef<typeof import('./constants/danbooru')['DANBOORU_CSV']>
     readonly DANBOORU_URL: UnwrapRef<typeof import('./constants/danbooru')['DANBOORU_URL']>
+    readonly DICE_BUTTON_ID: UnwrapRef<typeof import('./constants/nai')['DICE_BUTTON_ID']>
+    readonly DICE_BUTTON_TEXT: UnwrapRef<typeof import('./constants/nai')['DICE_BUTTON_TEXT']>
     readonly EffectScope: UnwrapRef<typeof import('vue')['EffectScope']>
-    readonly GENERATE_BUTTON_TEXTS_EN: UnwrapRef<typeof import('./constants/nai')['GENERATE_BUTTON_TEXTS_EN']>
-    readonly GENERATE_BUTTON_TEXTS_JP: UnwrapRef<typeof import('./constants/nai')['GENERATE_BUTTON_TEXTS_JP']>
+    readonly ElMessage: UnwrapRef<typeof import('element-plus/es')['ElMessage']>
     readonly NAI_URL: UnwrapRef<typeof import('./constants/nai')['NAI_URL']>
     readonly NEGATIVE_PROMPT_BUTTON_TEXT_EN: UnwrapRef<typeof import('./constants/nai')['NEGATIVE_PROMPT_BUTTON_TEXT_EN']>
     readonly NEGATIVE_PROMPT_BUTTON_TEXT_JP: UnwrapRef<typeof import('./constants/nai')['NEGATIVE_PROMPT_BUTTON_TEXT_JP']>
     readonly TAG_HELPER_SUGGESTION_COUNT: UnwrapRef<typeof import('./constants/settings')['TAG_HELPER_SUGGESTION_COUNT']>
+    readonly addDiceButton: UnwrapRef<typeof import('./content/addDiceButton')['addDiceButton']>
     readonly computed: UnwrapRef<typeof import('vue')['computed']>
     readonly createApp: UnwrapRef<typeof import('vue')['createApp']>
     readonly createDynamicPrompt: UnwrapRef<typeof import('./content/dynamic-prompts')['createDynamicPrompt']>
-    readonly createDynamicPromptButton: UnwrapRef<typeof import('./content/content-scripts')['createDynamicPromptButton']>
     readonly customRef: UnwrapRef<typeof import('vue')['customRef']>
     readonly defineAsyncComponent: UnwrapRef<typeof import('vue')['defineAsyncComponent']>
     readonly defineComponent: UnwrapRef<typeof import('vue')['defineComponent']>
     readonly effectScope: UnwrapRef<typeof import('vue')['effectScope']>
+    readonly generateButton: UnwrapRef<typeof import('./content/setupContents')['generateButton']>
     readonly getCurrentInstance: UnwrapRef<typeof import('vue')['getCurrentInstance']>
     readonly getCurrentScope: UnwrapRef<typeof import('vue')['getCurrentScope']>
-    readonly getGenerateButton: UnwrapRef<typeof import('./content/content-scripts')['getGenerateButton']>
+    readonly getStorage: UnwrapRef<typeof import('./utils/chrome-api')['getStorage']>
     readonly h: UnwrapRef<typeof import('vue')['h']>
     readonly inject: UnwrapRef<typeof import('vue')['inject']>
     readonly insertDanbooruTagToTextarea: UnwrapRef<typeof import('./utils/utils')['insertDanbooruTagToTextarea']>
-    readonly insertPrompt: UnwrapRef<typeof import('./content/content-scripts')['insertPrompt']>
-    readonly isNegativePromptVisible: UnwrapRef<typeof import('./content/content-scripts')['isNegativePromptVisible']>
     readonly isProxy: UnwrapRef<typeof import('vue')['isProxy']>
     readonly isReactive: UnwrapRef<typeof import('vue')['isReactive']>
     readonly isReadonly: UnwrapRef<typeof import('vue')['isReadonly']>
@@ -235,6 +257,8 @@ declare module '@vue/runtime-core' {
     readonly ref: UnwrapRef<typeof import('vue')['ref']>
     readonly removeCommentLines: UnwrapRef<typeof import('./content/dynamic-prompts')['removeCommentLines']>
     readonly resolveComponent: UnwrapRef<typeof import('vue')['resolveComponent']>
+    readonly saveStorage: UnwrapRef<typeof import('./utils/chrome-api')['saveStorage']>
+    readonly setupContents: UnwrapRef<typeof import('./content/setupContents')['setupContents']>
     readonly shallowReactive: UnwrapRef<typeof import('vue')['shallowReactive']>
     readonly shallowReadonly: UnwrapRef<typeof import('vue')['shallowReadonly']>
     readonly shallowRef: UnwrapRef<typeof import('vue')['shallowRef']>

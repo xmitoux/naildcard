@@ -92,6 +92,22 @@
     "useMoveLine": true,
     "useControlEnter": true,
     "createDynamicPromptButton": true,
-    "DanbooruTagCategory": true
+    "DanbooruTagCategory": true,
+    "BUTTON_TEXT_GENERATE_EN": true,
+    "BUTTON_TEXT_GENERATE_JA": true,
+    "generateButton": true,
+    "generatedImage": true,
+    "overlay": true,
+    "saveButton": true,
+    "setupContents": true,
+    "upscaleButton": true,
+    "upscaleButtonText": true,
+    "variationButton": true,
+    "BUTTON_ID_DICE_BUTTON": true,
+    "DICE_BUTTON_ID": true,
+    "DICE_BUTTON_TEXT": true,
+    "addDiceButton": true,
+    "getStorage": true,
+    "saveStorage": true
   }
 }
