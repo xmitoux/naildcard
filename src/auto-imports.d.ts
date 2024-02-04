@@ -104,7 +104,6 @@ declare module 'vue' {
     readonly DANBOORU_CSV: UnwrapRef<typeof import('./constants/danbooru')['DANBOORU_CSV']>
     readonly DANBOORU_URL: UnwrapRef<typeof import('./constants/danbooru')['DANBOORU_URL']>
     readonly EffectScope: UnwrapRef<typeof import('vue')['EffectScope']>
-    readonly ElMessage: UnwrapRef<typeof import('element-plus/es')['ElMessage']>
     readonly GENERATE_BUTTON_TEXTS_EN: UnwrapRef<typeof import('./constants/nai')['GENERATE_BUTTON_TEXTS_EN']>
     readonly GENERATE_BUTTON_TEXTS_JP: UnwrapRef<typeof import('./constants/nai')['GENERATE_BUTTON_TEXTS_JP']>
     readonly NAI_URL: UnwrapRef<typeof import('./constants/nai')['NAI_URL']>
@@ -188,7 +187,6 @@ declare module '@vue/runtime-core' {
     readonly DANBOORU_CSV: UnwrapRef<typeof import('./constants/danbooru')['DANBOORU_CSV']>
     readonly DANBOORU_URL: UnwrapRef<typeof import('./constants/danbooru')['DANBOORU_URL']>
     readonly EffectScope: UnwrapRef<typeof import('vue')['EffectScope']>
-    readonly ElMessage: UnwrapRef<typeof import('element-plus/es')['ElMessage']>
     readonly GENERATE_BUTTON_TEXTS_EN: UnwrapRef<typeof import('./constants/nai')['GENERATE_BUTTON_TEXTS_EN']>
     readonly GENERATE_BUTTON_TEXTS_JP: UnwrapRef<typeof import('./constants/nai')['GENERATE_BUTTON_TEXTS_JP']>
     readonly NAI_URL: UnwrapRef<typeof import('./constants/nai')['NAI_URL']>
