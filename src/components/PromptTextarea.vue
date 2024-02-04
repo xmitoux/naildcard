@@ -1,5 +1,13 @@
 <script setup lang="ts">
+import { ref, watchEffect, watch } from 'vue';
 import { ElInput } from 'element-plus';
+import { useControlBracket } from '@/composables/useControlBracket';
+import { useControlEnter } from '@/composables/useControlEnter';
+import { useCopyLine } from '@/composables/useCopyLine';
+import { useCutLine } from '@/composables/useCutLine';
+import { useInputHistory } from '@/composables/useInputHistory';
+import { useMoveLine } from '@/composables/useMoveLine';
+import { useToggleComment } from '@/composables/useToggleComment';
 
 const props = defineProps<{
     promptTextProp: string;

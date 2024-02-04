@@ -1,3 +1,5 @@
+import { Ref, nextTick } from 'vue';
+
 export const useMoveLine = (promptText: Ref<string>) => {
     const moveLine = (event: KeyboardEvent) => {
         if (

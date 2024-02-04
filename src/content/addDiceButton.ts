@@ -1,4 +1,13 @@
 import { getStorage } from '@/utils/chrome-api';
+import { parseWildcardsString } from '@/utils/utils';
+import {
+    DICE_BUTTON_ID,
+    DICE_BUTTON_TEXT,
+    NEGATIVE_PROMPT_BUTTON_TEXT_EN,
+    NEGATIVE_PROMPT_BUTTON_TEXT_JP,
+} from '@/constants/nai';
+import { createDynamicPrompt, removeCommentLines } from '@/content/dynamic-prompts';
+import { generateButton } from '@/content/setupContents';
 
 export const addDiceButton = ({ naildcardEnabled }: Settings) => {
     const proc = () => {

@@ -1,3 +1,5 @@
+import { BUTTON_TEXT_GENERATE_EN, BUTTON_TEXT_GENERATE_JA } from '@/constants/nai';
+
 export let generateButton: HTMLButtonElement | undefined;
 
 export const setupContents = () => {

@@ -1,3 +1,5 @@
+import { Ref, nextTick } from 'vue';
+
 export const useControlEnter = (promptText: Ref<string>) => {
     const controlEnter = (event: KeyboardEvent) => {
         if (
