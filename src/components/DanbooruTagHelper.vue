@@ -1,6 +1,10 @@
 <script setup lang="ts">
+import { ref, watchEffect, onMounted } from 'vue';
 import { ElAutocomplete, ElButton, ElCheckbox } from 'element-plus';
 import { List, Checked } from '@element-plus/icons-vue';
+import { useClipboardCopy } from '@/composables/useClipboardCopy';
+import { DANBOORU_CSV } from '@/constants/danbooru';
+import { TAG_HELPER_SUGGESTION_COUNT } from '@/constants/settings';
 
 const props = defineProps<{
     savedTagHistories: string;

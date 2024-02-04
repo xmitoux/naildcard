@@ -1,3 +1,5 @@
+import { Ref } from 'vue/dist/vue.js';
+
 export const useCopyLine = (promptText: Ref<string>) => {
     const copyLine = (event: KeyboardEvent) => {
         if ((!event.ctrlKey && !event.metaKey) || event.key !== 'c') {

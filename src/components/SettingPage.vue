@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, onMounted, computed } from 'vue';
 import {
     ElButton,
     ElForm,
@@ -14,6 +15,10 @@ import { Postcard, Memo, Edit, MagicStick } from '@element-plus/icons-vue';
 import PromptTextarea from '@/components/PromptTextarea.vue';
 import WildcardManager from '@/components/WildcardManager.vue';
 import DanbooruTagHelper from '@/components/DanbooruTagHelper.vue';
+import { ACTION_UPDATE_SETTINGS } from '@/constants/chrome';
+import { DANBOORU_URL } from '@/constants/danbooru';
+import { NAI_URL } from '@/constants/nai';
+import { insertDanbooruTagToTextarea } from '@/utils/utils';
 
 const currentSettings = ref<Settings>({
     naildcardEnabled: false,

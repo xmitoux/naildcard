@@ -1,3 +1,5 @@
+import { Ref, nextTick } from 'vue';
+
 export const useToggleComment = (promptText: Ref<string>) => {
     const toggleComment = (event: KeyboardEvent) => {
         if ((!event.ctrlKey && !event.metaKey) || event.key !== '/') {

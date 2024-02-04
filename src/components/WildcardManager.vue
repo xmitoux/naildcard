@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, watchEffect, computed, nextTick, watch } from 'vue';
 import { Check, Checked, Close, DeleteFilled, EditPen, List } from '@element-plus/icons-vue';
 import {
     ElButton,
@@ -11,6 +12,8 @@ import {
     ElScrollbar,
 } from 'element-plus';
 import PromptTextarea from '@/components/PromptTextarea.vue';
+import { useClipboardCopy } from '@/composables/useClipboardCopy';
+import { insertDanbooruTagToTextarea, parseWildcardsString } from '@/utils/utils';
 
 const props = defineProps<{
     wildcardsStringProp: string;

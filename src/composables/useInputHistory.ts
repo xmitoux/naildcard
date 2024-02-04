@@ -1,3 +1,5 @@
+import { Ref, ref, watch, nextTick } from 'vue';
+
 export const useInputHistory = (promptText: Ref<string>) => {
     const history = ref<string[]>([promptText.value]);
     const currentHistoryIndex = ref(0);
