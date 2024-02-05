@@ -202,9 +202,9 @@ const exportPrompt = () => exportSetting(currentSettings.value.prompt, 'dynamic-
 </script>
 
 <template>
-    <div style="height: 18vh">
+    <div style="height: 20vh">
         <ElRow>
-            <ElCol :span="6">
+            <ElCol :span="7">
                 <h2>⚙️ Naildcard Settings</h2>
                 <ElForm inline label-position="top" label-width="250px">
                     <ElFormItem label="Enabled">
@@ -224,7 +224,7 @@ const exportPrompt = () => exportSetting(currentSettings.value.prompt, 'dynamic-
                     </ElFormItem>
                 </ElForm>
             </ElCol>
-            <ElCol :span="18">
+            <ElCol :span="17">
                 <h2>📦 Danbooru Tag Helper</h2>
 
                 <ElForm inline label-position="top">
@@ -308,10 +308,10 @@ const exportPrompt = () => exportSetting(currentSettings.value.prompt, 'dynamic-
         </ElRow>
     </div>
 
-    <div style="height: 75vh">
+    <div style="height: 70vh">
         <ElTabs v-model="activeTabName" type="card">
             <ElTabPane label="📝Dynamic Prompt" name="Prompt">
-                <ElRow>
+                <ElRow style="margin: 5px 0">
                     <ElButton
                         :class="{ 'dark-button-primary': isDark }"
                         :icon="MagicStick"
@@ -357,7 +357,7 @@ const exportPrompt = () => exportSetting(currentSettings.value.prompt, 'dynamic-
                 />
             </ElTabPane>
 
-            <ElTabPane label="🃏Wildcard" name="Wildcard">
+            <ElTabPane label="🃏Wildcards" name="Wildcard">
                 <WildcardManager
                     ref="wildcardManagerRef"
                     :wildcards="currentSettings.wildcards"

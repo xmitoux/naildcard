@@ -224,8 +224,8 @@ const importWildcards: UploadRequestHandler = async (options: UploadRequestOptio
 
 <template>
     <!-- 追加エリア -->
-    <ElRow>
-        <ElCol :span="4">
+    <ElRow style="margin-top: 5px">
+        <ElCol :span="8">
             <ElInput
                 v-model="newWildcardKey"
                 clearable
@@ -237,18 +237,18 @@ const importWildcards: UploadRequestHandler = async (options: UploadRequestOptio
                 </template>
             </ElInput>
         </ElCol>
-        <ElCol :span="5">
+        <ElCol :span="1">
             <!-- スペース -->
         </ElCol>
 
         <ElButton
-            :class="{ 'dark-button-primary': isDark }"
+            :class="{ 'dark-button-success': isDark }"
             :icon="Upload"
             size="small"
-            type="primary"
+            type="success"
             @click="exportWildcards"
         >
-            Export Prompt
+            Export Wildcards
         </ElButton>
         <ElUpload
             v-model:file-list="fileList"
@@ -258,12 +258,12 @@ const importWildcards: UploadRequestHandler = async (options: UploadRequestOptio
             :http-request="importWildcards"
         >
             <ElButton
-                :class="{ 'dark-button-primary': isDark }"
+                :class="{ 'dark-button-success': isDark }"
                 :icon="Download"
                 size="small"
-                type="primary"
+                type="success"
             >
-                Import Prompt
+                Import Wildcards
             </ElButton>
         </ElUpload>
     </ElRow>
@@ -389,9 +389,9 @@ p.wildcard-selected:hover {
     padding: 2px;
 }
 
-.dark-button-primary {
-    --el-button-bg-color: var(--el-color-primary-light-3);
-    --el-button-border-color: var(--el-color-primary-light-5);
+.dark-button-success {
+    --el-button-bg-color: var(--el-color-success-light-3);
+    --el-button-border-color: var(--el-color-success-light-5);
 }
 
 .dark-button-success {
