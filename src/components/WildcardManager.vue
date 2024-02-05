@@ -222,7 +222,7 @@ const { copying, copyToClipboard } = useClipboardCopy();
 <template>
     <!-- 追加エリア -->
     <ElRow>
-        <ElCol :span="9">
+        <ElCol :span="4">
             <ElInput
                 v-model="newWildcardKey"
                 clearable
@@ -239,7 +239,7 @@ const { copying, copyToClipboard } = useClipboardCopy();
     <ElRow>
         <!-- 選択エリア -->
         <ElCol :span="9">
-            <ElScrollbar :max-height="325">
+            <ElScrollbar max-height="65vh">
                 <p
                     v-for="wildcardKey in sortedWildcard"
                     :class="{
@@ -267,7 +267,7 @@ const { copying, copyToClipboard } = useClipboardCopy();
                     <!-- 編集ボタン -->
                     <template v-if="isWildcardSelected(wildcardKey) && !renamingWildcard">
                         <span class="edit-buttons">
-                            <ElButtonGroup type="primary">
+                            <ElButtonGroup type="info">
                                 <ElButton
                                     circle
                                     :icon="copying ? Checked : List"
@@ -320,7 +320,6 @@ const { copying, copyToClipboard } = useClipboardCopy();
             <PromptTextarea
                 v-show="selectedWildcard"
                 ref="wildcardTextareaRef"
-                :rows="15"
                 :prompt-text-prop="selectedWildcardString"
                 @change="editWildcardString"
             />
@@ -346,16 +345,12 @@ p {
 }
 
 p:hover {
-    background-color: #e0e0e0; /* ホバー時の背景色 */
-}
-
-.wildcard-selected {
-    background-color: lightblue;
+    background-color: var(--el-color-info);
 }
 
 .wildcard-selected,
 p.wildcard-selected:hover {
-    background-color: lightblue;
+    background-color: var(--el-color-primary-light-3);
 }
 
 .wildcard-renaming {
