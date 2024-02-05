@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
+import { useDark, useToggle } from '@vueuse/core';
 import {
     ElButton,
     ElForm,
@@ -11,7 +12,7 @@ import {
     ElTabPane,
     ElTabs,
 } from 'element-plus';
-import { Postcard, Memo, Edit, MagicStick } from '@element-plus/icons-vue';
+import { Postcard, Memo, Edit, MagicStick, Sunny, Moon } from '@element-plus/icons-vue';
 import PromptTextarea from '@/components/PromptTextarea.vue';
 import WildcardManager from '@/components/WildcardManager.vue';
 import DanbooruTagHelper from '@/components/DanbooruTagHelper.vue';
@@ -173,6 +174,10 @@ const onSendDanbooruTag = (tag: string, forceMoveFocus: boolean) => {
 const onIntelliSense = () => {
     danbooruTagHelperRef.value?.focus();
 };
+
+const isDark = useDark();
+const toggleDark = useToggle(isDark);
+const darkMode = ref(isDark.value);
 </script>
 
 <template>
@@ -180,6 +185,15 @@ const onIntelliSense = () => {
     <ElForm inline label-position="top" label-width="250px">
         <ElFormItem label="Enabled">
             <ElSwitch v-model="currentSettings.naildcardEnabled" @change="saveSettings" />
+        </ElFormItem>
+
+        <ElFormItem label="Dark Mode">
+            <ElSwitch
+                v-model="darkMode"
+                :active-action-icon="Moon"
+                :inactive-action-icon="Sunny"
+                @change="toggleDark()"
+            />
         </ElFormItem>
     </ElForm>
 
@@ -224,6 +238,7 @@ const onIntelliSense = () => {
 
                 <template v-if="activeTabName === 'Prompt'">
                     <ElButton
+                        :class="{ 'dark-button-primary': isDark }"
                         :disabled="!danbooruTag"
                         :icon="Edit"
                         type="primary"
@@ -236,6 +251,7 @@ const onIntelliSense = () => {
                 </template>
                 <template v-else>
                     <ElButton
+                        :class="{ 'dark-button-success': isDark }"
                         :disabled="!danbooruTag || !wildcardManagerRef?.selectedWildcard"
                         :icon="Postcard"
                         type="success"
@@ -246,7 +262,13 @@ const onIntelliSense = () => {
                         Insert Tag to Wildcard
                     </ElButton>
                 </template>
-                <ElButton :disabled="!danbooruTag" type="warning" :icon="Memo" @click="referToWiki">
+                <ElButton
+                    :class="{ 'dark-button-warning': isDark }"
+                    :disabled="!danbooruTag"
+                    type="warning"
+                    :icon="Memo"
+                    @click="referToWiki"
+                >
                     Refer to Wiki
                 </ElButton>
             </ElSpace>
@@ -264,6 +286,7 @@ const onIntelliSense = () => {
             />
 
             <ElButton
+                :class="{ 'dark-button-primary': isDark }"
                 :icon="MagicStick"
                 type="primary"
                 style="margin-top: 5px"
@@ -300,3 +323,20 @@ const onIntelliSense = () => {
         </ElTabPane>
     </ElTabs>
 </template>
+
+<style scoped>
+.dark-button-primary {
+    --el-button-bg-color: var(--el-color-primary-light-3);
+    --el-button-border-color: var(--el-color-primary-light-5);
+}
+
+.dark-button-success {
+    --el-button-bg-color: var(--el-color-success-light-3);
+    --el-button-border-color: var(--el-color-success-light-5);
+}
+
+.dark-button-warning {
+    --el-button-bg-color: var(--el-color-warning-light-3);
+    --el-button-border-color: var(--el-color-warning-light-5);
+}
+</style>

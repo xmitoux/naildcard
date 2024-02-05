@@ -267,7 +267,7 @@ const { copying, copyToClipboard } = useClipboardCopy();
                     <!-- 編集ボタン -->
                     <template v-if="isWildcardSelected(wildcardKey) && !renamingWildcard">
                         <span class="edit-buttons">
-                            <ElButtonGroup type="primary">
+                            <ElButtonGroup type="info">
                                 <ElButton
                                     circle
                                     :icon="copying ? Checked : List"
@@ -346,16 +346,12 @@ p {
 }
 
 p:hover {
-    background-color: #e0e0e0; /* ホバー時の背景色 */
-}
-
-.wildcard-selected {
-    background-color: lightblue;
+    background-color: var(--el-color-info);
 }
 
 .wildcard-selected,
 p.wildcard-selected:hover {
-    background-color: lightblue;
+    background-color: var(--el-color-primary-light-3);
 }
 
 .wildcard-renaming {
