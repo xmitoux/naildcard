@@ -13,35 +13,43 @@ import {
     ElSwitch,
     ElTabPane,
     ElTabs,
+    ElUpload,
+    UploadRequestHandler,
+    UploadRequestOptions,
 } from 'element-plus';
-import { Postcard, Memo, Edit, MagicStick, Sunny, Moon } from '@element-plus/icons-vue';
+import {
+    Postcard,
+    Memo,
+    Edit,
+    MagicStick,
+    Sunny,
+    Moon,
+    Upload,
+    Download,
+} from '@element-plus/icons-vue';
 import PromptTextarea from '@/components/PromptTextarea.vue';
 import WildcardManager from '@/components/WildcardManager.vue';
 import DanbooruTagHelper from '@/components/DanbooruTagHelper.vue';
-import { ACTION_UPDATE_SETTINGS } from '@/constants/chrome';
 import { DANBOORU_URL } from '@/constants/danbooru';
-import { NAI_URL } from '@/constants/nai';
 import { insertDanbooruTagToTextarea } from '@/utils/utils';
+import { getStorage, saveStorage } from '@/utils/chrome-api';
+import { defaultSettings } from '@/background';
+import { useFileImportExport } from '@/composables/useFileImportExport';
 
-const currentSettings = ref<Settings>({
-    naildcardEnabled: false,
-    prompt: '',
-    wildcards: '',
-    danbooruTagHistories: '[]',
+const isDark = useDark();
+const toggleDark = useToggle(isDark);
+const darkMode = ref(isDark.value);
+
+const currentSettings = ref<Settings>(defaultSettings);
+
+onMounted(() => {
+    getStorage((settings) => {
+        currentSettings.value = { ...currentSettings.value, ...settings };
+    });
 });
 
-onMounted(async () => {
-    const storageSettings = await chrome.storage.local.get();
-    currentSettings.value = { ...currentSettings.value, ...storageSettings };
-});
-
-const saveSettings = async () => {
-    await chrome.storage.local.set(currentSettings.value);
-
-    const [tab] = await chrome.tabs.query({ url: NAI_URL });
-    if (tab && tab.id) {
-        await chrome.tabs.sendMessage(tab.id, { action: ACTION_UPDATE_SETTINGS });
-    }
+const saveSettings = () => {
+    saveStorage(currentSettings.value);
 };
 
 const savePrompt = (changedPrompt: string) => {
@@ -49,9 +57,7 @@ const savePrompt = (changedPrompt: string) => {
     saveSettings();
 };
 
-const isWildcardManagerMode = ref(true);
-
-const saveWildcard = (changedWildcard: string) => {
+const saveWildcard = (changedWildcard: WildcardMap) => {
     currentSettings.value.wildcards = changedWildcard;
     saveSettings();
 };
@@ -182,15 +188,23 @@ const onIntelliSense = () => {
     danbooruTagHelperRef.value?.focus();
 };
 
-const isDark = useDark();
-const toggleDark = useToggle(isDark);
-const darkMode = ref(isDark.value);
+const { importSettings, exportSetting, fileList } = useFileImportExport();
+const importPrompt: UploadRequestHandler = async (options: UploadRequestOptions) => {
+    const loadPrompt = (prompt: string, settings: Settings) => {
+        settings.prompt = prompt;
+        return settings;
+    };
+
+    currentSettings.value = await importSettings(options.file, loadPrompt);
+};
+
+const exportPrompt = () => exportSetting(currentSettings.value.prompt, 'dynamic-prompt');
 </script>
 
 <template>
-    <div style="height: 18vh">
+    <div style="height: 20vh">
         <ElRow>
-            <ElCol :span="6">
+            <ElCol :span="7">
                 <h2>⚙️ Naildcard Settings</h2>
                 <ElForm inline label-position="top" label-width="250px">
                     <ElFormItem label="Enabled">
@@ -210,7 +224,7 @@ const darkMode = ref(isDark.value);
                     </ElFormItem>
                 </ElForm>
             </ElCol>
-            <ElCol :span="18">
+            <ElCol :span="17">
                 <h2>📦 Danbooru Tag Helper</h2>
 
                 <ElForm inline label-position="top">
@@ -294,17 +308,47 @@ const darkMode = ref(isDark.value);
         </ElRow>
     </div>
 
-    <div style="height: 75vh">
+    <div style="height: 70vh">
         <ElTabs v-model="activeTabName" type="card">
             <ElTabPane label="📝Dynamic Prompt" name="Prompt">
-                <ElButton
-                    :class="{ 'dark-button-primary': isDark }"
-                    :icon="MagicStick"
-                    type="primary"
-                    size="small"
-                    style="margin-bottom: 5px"
-                    @click="formatPrompt"
-                />
+                <ElRow style="margin: 5px 0">
+                    <ElButton
+                        :class="{ 'dark-button-primary': isDark }"
+                        :icon="MagicStick"
+                        size="small"
+                        type="primary"
+                        @click="formatPrompt"
+                    >
+                        Format Prompt
+                    </ElButton>
+
+                    <ElButton
+                        :class="{ 'dark-button-primary': isDark }"
+                        :icon="Upload"
+                        size="small"
+                        type="primary"
+                        @click="exportPrompt()"
+                    >
+                        Export Prompt
+                    </ElButton>
+                    <ElUpload
+                        v-model:file-list="fileList"
+                        accept=".txt"
+                        :auto-upload="true"
+                        :show-file-list="false"
+                        :http-request="importPrompt"
+                    >
+                        <ElButton
+                            :class="{ 'dark-button-primary': isDark }"
+                            :icon="Download"
+                            size="small"
+                            type="primary"
+                        >
+                            Import Prompt
+                        </ElButton>
+                    </ElUpload>
+                </ElRow>
+
                 <PromptTextarea
                     ref="promptTextareaRef"
                     :prompt-text-prop="currentSettings.prompt"
@@ -313,27 +357,12 @@ const darkMode = ref(isDark.value);
                 />
             </ElTabPane>
 
-            <ElTabPane label="🃏Wildcard" name="Wildcard">
-                <ElSwitch
-                    v-model="isWildcardManagerMode"
-                    inactive-text="Simple"
-                    active-text="Manager"
+            <ElTabPane label="🃏Wildcards" name="Wildcard">
+                <WildcardManager
+                    ref="wildcardManagerRef"
+                    :wildcards="currentSettings.wildcards"
+                    @change="saveWildcard"
                 />
-
-                <template v-if="isWildcardManagerMode">
-                    <WildcardManager
-                        ref="wildcardManagerRef"
-                        :wildcards-string-prop="currentSettings.wildcards"
-                        @change="saveWildcard"
-                    />
-                </template>
-
-                <template v-else>
-                    <PromptTextarea
-                        :prompt-text-prop="currentSettings.wildcards"
-                        @change="saveWildcard"
-                    />
-                </template>
             </ElTabPane>
         </ElTabs>
     </div>

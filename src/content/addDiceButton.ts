@@ -1,5 +1,4 @@
 import { getStorage } from '@/utils/chrome-api';
-import { parseWildcardsString } from '@/utils/utils';
 import {
     DICE_BUTTON_ID,
     DICE_BUTTON_TEXT,
@@ -62,21 +61,33 @@ const onDiceButtonClick = () => {
     });
 };
 
-const insertPrompt = (prompt: string, wildcards: string) => {
+const insertPrompt = (prompt: string, wildcards: WildcardMap) => {
     const textbox = document.querySelector('textarea');
-    if (textbox != null) {
-        const stringToInsert = createDynamicPrompt(
-            removeCommentLines(prompt),
-            parseWildcardsString(removeCommentLines(wildcards)),
-        );
-
-        textbox.value = stringToInsert;
-
-        // プロンプト欄のReactコンポーネントのinputイベントを発火させてテキスト入力を確定させる
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (textbox as any)._valueTracker = '';
-        textbox.dispatchEvent(new Event('input', { bubbles: true }));
+    if (!textbox) {
+        return;
     }
+
+    const promptRemovedComment = removeCommentLines(prompt);
+
+    // ワイルドカード内のコメント行を削除
+    const wildcardsRemovedComment = { ...wildcards };
+    Object.keys(wildcards).forEach((key) => {
+        wildcardsRemovedComment[key] = wildcards[key]
+            .map((wildcard) => {
+                return removeCommentLines(wildcard);
+            })
+            // コメントによって空になった行を削除
+            .filter((wildcard) => !!wildcard);
+    });
+
+    const stringToInsert = createDynamicPrompt(promptRemovedComment, wildcardsRemovedComment);
+
+    textbox.value = stringToInsert;
+
+    // プロンプト欄のReactコンポーネントのinputイベントを発火させてテキスト入力を確定させる
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (textbox as any)._valueTracker = '';
+    textbox.dispatchEvent(new Event('input', { bubbles: true }));
 };
 
 const isNegativePromptVisible = () => {

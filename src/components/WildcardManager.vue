@@ -1,6 +1,15 @@
 <script setup lang="ts">
-import { ref, watchEffect, computed, nextTick, watch } from 'vue';
-import { Check, Checked, Close, DeleteFilled, EditPen, List } from '@element-plus/icons-vue';
+import { ref, computed, nextTick, watch, watchEffect } from 'vue';
+import {
+    Check,
+    Checked,
+    Close,
+    DeleteFilled,
+    Download,
+    EditPen,
+    List,
+    Upload,
+} from '@element-plus/icons-vue';
 import {
     ElButton,
     ElButtonGroup,
@@ -10,18 +19,25 @@ import {
     ElPopconfirm,
     ElRow,
     ElScrollbar,
+    ElUpload,
+    UploadRequestHandler,
+    UploadRequestOptions,
 } from 'element-plus';
 import PromptTextarea from '@/components/PromptTextarea.vue';
 import { useClipboardCopy } from '@/composables/useClipboardCopy';
-import { insertDanbooruTagToTextarea, parseWildcardsString } from '@/utils/utils';
+import { insertDanbooruTagToTextarea } from '@/utils/utils';
+import { useDark } from '@vueuse/core';
+import { useFileImportExport } from '@/composables/useFileImportExport';
 
 const props = defineProps<{
-    wildcardsStringProp: string;
+    wildcards: WildcardMap;
 }>();
 
 const emit = defineEmits<{
-    change: [changedWildcardsString: string];
+    change: [changedWildcards: WildcardMap];
 }>();
+
+const isDark = useDark();
 
 // 親がタグ挿入を実行するためのexpose
 const insertDanbooruTag = (
@@ -45,14 +61,12 @@ defineExpose({
     selectedWildcard,
 });
 
-const wildcardsString = ref('');
+const wildcardsWork = ref<WildcardMap>({});
 
 // 起動時の設定読み込みを監視
 watchEffect(() => {
-    wildcardsString.value = props.wildcardsStringProp;
+    wildcardsWork.value = props.wildcards;
 });
-
-const wildcardsObj = computed<WildcardMap>(() => parseWildcardsString(wildcardsString.value));
 
 const selectWildcard = (wildcardKey: string) => {
     selectedWildcard.value = wildcardKey;
@@ -67,7 +81,7 @@ const selectedWildcardString = computed<string>(() => {
     if (!selectedWildcard.value) {
         return '';
     }
-    return wildcardsObj.value[selectedWildcard.value]?.join('\n') || '';
+    return wildcardsWork.value[selectedWildcard.value]?.join('\n') || '';
 });
 
 const isWildcardSelected = (wildcardKey: string) => wildcardKey === selectedWildcard.value;
@@ -89,13 +103,13 @@ const addWildcard = (addingWildcardKey: string): boolean => {
         return false;
     }
 
-    wildcardsObj.value[addingWildcardKey] = [];
+    wildcardsWork.value[addingWildcardKey] = [];
     selectedWildcard.value = addingWildcardKey;
 
     return true;
 };
 
-const invalidWildcardNameChars = ['(', ')', '<', '>', '$', '#', '__', ':'];
+const invalidWildcardNameChars = ['(', ')', '<', '>', '$', '#', '__'];
 const validateWildcardName = (name: string): boolean => {
     if (!name) {
         return false;
@@ -106,7 +120,7 @@ const validateWildcardName = (name: string): boolean => {
         return false;
     }
 
-    if (Object.keys(wildcardsObj.value).includes(name)) {
+    if (Object.keys(wildcardsWork.value).includes(name)) {
         ElMessage.warning('Wildcard already exists!');
         return false;
     }
@@ -115,7 +129,7 @@ const validateWildcardName = (name: string): boolean => {
 };
 
 const deleteWildcard = (wildcardKey: string) => {
-    delete wildcardsObj.value[wildcardKey];
+    delete wildcardsWork.value[wildcardKey];
     saveWildcard();
 
     // ワイルドカード削除不具合対応
@@ -131,38 +145,12 @@ const editWildcardString = (changedWildcardString: string) => {
     }
 
     const wildcardStrings = changedWildcardString.split('\n');
-
-    if (wildcardStrings.some((str) => str.endsWith(':'))) {
-        ElMessage.error("Variants ending with ':' are not allowed! Changes will not be saved!");
-        return;
-    }
-
-    wildcardsObj.value[selectedWildcard.value] = wildcardStrings;
+    wildcardsWork.value[selectedWildcard.value] = wildcardStrings;
     saveWildcard();
 };
 
 const saveWildcard = () => {
-    const parseWildcardsObject = (obj: WildcardMap): string => {
-        let result = '';
-
-        // キーを昇順でソート
-        const sortedKeys = Object.keys(obj).sort();
-
-        for (const key of sortedKeys) {
-            // キーを追加
-            result += `${key}:\n`;
-
-            // 配列の各値を追加
-            for (const value of obj[key]) {
-                result += `${value}\n`;
-            }
-        }
-
-        return result.replace(/\n$/, '');
-    };
-
-    wildcardsString.value = parseWildcardsObject(wildcardsObj.value);
-    emit('change', wildcardsString.value);
+    emit('change', wildcardsWork.value);
 };
 
 const renamingWildcard = ref('');
@@ -182,16 +170,15 @@ watch(renameWildcardInputRef, () => {
     renameWildcardInputRef.value?.[0].focus();
 });
 
-const saveRenamingWildcard = () => {
+const saveRenamingWildcard = (event: Event) => {
     if (renamedWildcard.value === renamingWildcard.value) {
         cancelRenamingWildcard();
         return;
     }
 
     if (addWildcard(renamedWildcard.value)) {
-        wildcardsObj.value[renamedWildcard.value] = wildcardsObj.value[renamingWildcard.value];
-        delete wildcardsObj.value[renamingWildcard.value];
-        saveWildcard();
+        wildcardsWork.value[renamedWildcard.value] = wildcardsWork.value[renamingWildcard.value];
+        deleteWildcard(renamingWildcard.value);
 
         // リネーム後を選択状態にするために保持
         const renamedWildcardName = renamedWildcard.value;
@@ -199,6 +186,11 @@ const saveRenamingWildcard = () => {
         cancelRenamingWildcard();
 
         selectWildcard(renamedWildcardName);
+
+        // リネーム不具合対応
+        // (確定ボタンをクリックするとpタグのclickイベントが発生し、リネーム前のゾンビが残る
+        // 確定ボタンの@click.stopがなぜか効かないのでstopPropagation)
+        event.stopPropagation();
     }
 };
 
@@ -208,7 +200,7 @@ const cancelRenamingWildcard = () => {
     renameWildcardInputRef.value = null;
 };
 
-const sortedWildcard = computed<string[]>(() => Object.keys(wildcardsObj.value).sort());
+const sortedWildcard = computed<string[]>(() => Object.keys(wildcardsWork.value).sort());
 
 const onRenameInputFocus = () => {
     const input = renameWildcardInputRef.value![0].input!;
@@ -217,12 +209,27 @@ const onRenameInputFocus = () => {
 };
 
 const { copying, copyToClipboard } = useClipboardCopy();
+
+const { importSettings, exportSetting, fileList } = useFileImportExport();
+
+const exportWildcards = () =>
+    exportSetting(JSON.stringify(wildcardsWork.value), 'wildcards', 'json');
+const importWildcards: UploadRequestHandler = async (options: UploadRequestOptions) => {
+    const loadWildcard = (wildcardJson: string, settings: Settings) => {
+        const wildcards = JSON.parse(wildcardJson);
+        settings.wildcards = wildcards;
+        return settings;
+    };
+
+    const importedSettings = await importSettings(options.file, loadWildcard);
+    wildcardsWork.value = importedSettings.wildcards;
+};
 </script>
 
 <template>
     <!-- 追加エリア -->
-    <ElRow>
-        <ElCol :span="4">
+    <ElRow style="margin-top: 5px">
+        <ElCol :span="8">
             <ElInput
                 v-model="newWildcardKey"
                 clearable
@@ -234,6 +241,35 @@ const { copying, copyToClipboard } = useClipboardCopy();
                 </template>
             </ElInput>
         </ElCol>
+        <ElCol :span="1">
+            <!-- スペース -->
+        </ElCol>
+
+        <ElButton
+            :class="{ 'dark-button-success': isDark }"
+            :icon="Upload"
+            size="small"
+            type="success"
+            @click="exportWildcards"
+        >
+            Export Wildcards
+        </ElButton>
+        <ElUpload
+            v-model:file-list="fileList"
+            accept=".json"
+            :auto-upload="true"
+            :show-file-list="false"
+            :http-request="importWildcards"
+        >
+            <ElButton
+                :class="{ 'dark-button-success': isDark }"
+                :icon="Download"
+                size="small"
+                type="success"
+            >
+                Import Wildcards
+            </ElButton>
+        </ElUpload>
     </ElRow>
 
     <ElRow>
@@ -355,5 +391,20 @@ p.wildcard-selected:hover {
 
 .wildcard-renaming {
     padding: 2px;
+}
+
+.dark-button-success {
+    --el-button-bg-color: var(--el-color-success-light-3);
+    --el-button-border-color: var(--el-color-success-light-5);
+}
+
+.dark-button-success {
+    --el-button-bg-color: var(--el-color-success-light-3);
+    --el-button-border-color: var(--el-color-success-light-5);
+}
+
+.dark-button-warning {
+    --el-button-bg-color: var(--el-color-warning-light-3);
+    --el-button-border-color: var(--el-color-warning-light-5);
 }
 </style>
