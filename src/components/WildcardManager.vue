@@ -35,6 +35,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     change: [changedWildcards: WildcardMap];
+    intellisense: [];
 }>();
 
 const isDark = useDark();
@@ -361,6 +362,7 @@ const importWildcards: UploadRequestHandler = async (options: UploadRequestOptio
                 ref="wildcardTextareaRef"
                 :prompt-text-prop="selectedWildcardString"
                 @change="editWildcardString"
+                @keydown.ctrl.space.prevent="emit('intellisense')"
             />
         </ElCol>
     </ElRow>

@@ -362,6 +362,7 @@ const exportPrompt = () => exportSetting(currentSettings.value.prompt, 'dynamic-
                     ref="wildcardManagerRef"
                     :wildcards="currentSettings.wildcards"
                     @change="saveWildcard"
+                    @intellisense="onIntelliSense"
                 />
             </ElTabPane>
         </ElTabs>
