@@ -170,7 +170,7 @@ watch(renameWildcardInputRef, () => {
     renameWildcardInputRef.value?.[0].focus();
 });
 
-const saveRenamingWildcard = () => {
+const saveRenamingWildcard = (event: Event) => {
     if (renamedWildcard.value === renamingWildcard.value) {
         cancelRenamingWildcard();
         return;
@@ -178,8 +178,7 @@ const saveRenamingWildcard = () => {
 
     if (addWildcard(renamedWildcard.value)) {
         wildcardsWork.value[renamedWildcard.value] = wildcardsWork.value[renamingWildcard.value];
-        delete wildcardsWork.value[renamingWildcard.value];
-        saveWildcard();
+        deleteWildcard(renamingWildcard.value);
 
         // リネーム後を選択状態にするために保持
         const renamedWildcardName = renamedWildcard.value;
@@ -187,6 +186,11 @@ const saveRenamingWildcard = () => {
         cancelRenamingWildcard();
 
         selectWildcard(renamedWildcardName);
+
+        // リネーム不具合対応
+        // (確定ボタンをクリックするとpタグのclickイベントが発生し、リネーム前のゾンビが残る
+        // 確定ボタンの@click.stopがなぜか効かないのでstopPropagation)
+        event.stopPropagation();
     }
 };
 
