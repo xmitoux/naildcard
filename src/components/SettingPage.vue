@@ -13,21 +13,34 @@ import {
     ElSwitch,
     ElTabPane,
     ElTabs,
+    ElUpload,
+    UploadRequestHandler,
+    UploadRequestOptions,
 } from 'element-plus';
-import { Postcard, Memo, Edit, MagicStick, Sunny, Moon } from '@element-plus/icons-vue';
+import {
+    Postcard,
+    Memo,
+    Edit,
+    MagicStick,
+    Sunny,
+    Moon,
+    Upload,
+    Download,
+} from '@element-plus/icons-vue';
 import PromptTextarea from '@/components/PromptTextarea.vue';
 import WildcardManager from '@/components/WildcardManager.vue';
 import DanbooruTagHelper from '@/components/DanbooruTagHelper.vue';
 import { DANBOORU_URL } from '@/constants/danbooru';
 import { insertDanbooruTagToTextarea } from '@/utils/utils';
 import { getStorage, saveStorage } from '@/utils/chrome-api';
+import { defaultSettings } from '@/background';
+import { useFileImportExport } from '@/composables/useFileImportExport';
 
-const currentSettings = ref<Settings>({
-    naildcardEnabled: false,
-    prompt: '',
-    wildcards: {},
-    danbooruTagHistories: '[]',
-});
+const isDark = useDark();
+const toggleDark = useToggle(isDark);
+const darkMode = ref(isDark.value);
+
+const currentSettings = ref<Settings>(defaultSettings);
 
 onMounted(() => {
     getStorage((settings) => {
@@ -175,9 +188,17 @@ const onIntelliSense = () => {
     danbooruTagHelperRef.value?.focus();
 };
 
-const isDark = useDark();
-const toggleDark = useToggle(isDark);
-const darkMode = ref(isDark.value);
+const { importSettings, exportSetting, fileList } = useFileImportExport();
+const importPrompt: UploadRequestHandler = async (options: UploadRequestOptions) => {
+    const loadPrompt = (prompt: string, settings: Settings) => {
+        settings.prompt = prompt;
+        return settings;
+    };
+
+    currentSettings.value = await importSettings(options.file, loadPrompt);
+};
+
+const exportPrompt = () => exportSetting(currentSettings.value.prompt, 'dynamic-prompt');
 </script>
 
 <template>
@@ -290,14 +311,44 @@ const darkMode = ref(isDark.value);
     <div style="height: 75vh">
         <ElTabs v-model="activeTabName" type="card">
             <ElTabPane label="📝Dynamic Prompt" name="Prompt">
-                <ElButton
-                    :class="{ 'dark-button-primary': isDark }"
-                    :icon="MagicStick"
-                    type="primary"
-                    size="small"
-                    style="margin-bottom: 5px"
-                    @click="formatPrompt"
-                />
+                <ElRow>
+                    <ElButton
+                        :class="{ 'dark-button-primary': isDark }"
+                        :icon="MagicStick"
+                        size="small"
+                        type="primary"
+                        @click="formatPrompt"
+                    >
+                        Format Prompt
+                    </ElButton>
+
+                    <ElButton
+                        :class="{ 'dark-button-primary': isDark }"
+                        :icon="Upload"
+                        size="small"
+                        type="primary"
+                        @click="exportPrompt()"
+                    >
+                        Export Prompt
+                    </ElButton>
+                    <ElUpload
+                        v-model:file-list="fileList"
+                        accept=".txt"
+                        :auto-upload="true"
+                        :show-file-list="false"
+                        :http-request="importPrompt"
+                    >
+                        <ElButton
+                            :class="{ 'dark-button-primary': isDark }"
+                            :icon="Download"
+                            size="small"
+                            type="primary"
+                        >
+                            Import Prompt
+                        </ElButton>
+                    </ElUpload>
+                </ElRow>
+
                 <PromptTextarea
                     ref="promptTextareaRef"
                     :prompt-text-prop="currentSettings.prompt"

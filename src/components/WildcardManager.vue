@@ -1,6 +1,15 @@
 <script setup lang="ts">
 import { ref, computed, nextTick, watch, watchEffect } from 'vue';
-import { Check, Checked, Close, DeleteFilled, EditPen, List } from '@element-plus/icons-vue';
+import {
+    Check,
+    Checked,
+    Close,
+    DeleteFilled,
+    Download,
+    EditPen,
+    List,
+    Upload,
+} from '@element-plus/icons-vue';
 import {
     ElButton,
     ElButtonGroup,
@@ -10,10 +19,15 @@ import {
     ElPopconfirm,
     ElRow,
     ElScrollbar,
+    ElUpload,
+    UploadRequestHandler,
+    UploadRequestOptions,
 } from 'element-plus';
 import PromptTextarea from '@/components/PromptTextarea.vue';
 import { useClipboardCopy } from '@/composables/useClipboardCopy';
 import { insertDanbooruTagToTextarea } from '@/utils/utils';
+import { useDark } from '@vueuse/core';
+import { useFileImportExport } from '@/composables/useFileImportExport';
 
 const props = defineProps<{
     wildcards: WildcardMap;
@@ -22,6 +36,8 @@ const props = defineProps<{
 const emit = defineEmits<{
     change: [changedWildcards: WildcardMap];
 }>();
+
+const isDark = useDark();
 
 // 親がタグ挿入を実行するためのexpose
 const insertDanbooruTag = (
@@ -189,6 +205,21 @@ const onRenameInputFocus = () => {
 };
 
 const { copying, copyToClipboard } = useClipboardCopy();
+
+const { importSettings, exportSetting, fileList } = useFileImportExport();
+
+const exportWildcards = () =>
+    exportSetting(JSON.stringify(wildcardsWork.value), 'wildcards', 'json');
+const importWildcards: UploadRequestHandler = async (options: UploadRequestOptions) => {
+    const loadWildcard = (wildcardJson: string, settings: Settings) => {
+        const wildcards = JSON.parse(wildcardJson);
+        settings.wildcards = wildcards;
+        return settings;
+    };
+
+    const importedSettings = await importSettings(options.file, loadWildcard);
+    wildcardsWork.value = importedSettings.wildcards;
+};
 </script>
 
 <template>
@@ -206,6 +237,35 @@ const { copying, copyToClipboard } = useClipboardCopy();
                 </template>
             </ElInput>
         </ElCol>
+        <ElCol :span="5">
+            <!-- スペース -->
+        </ElCol>
+
+        <ElButton
+            :class="{ 'dark-button-primary': isDark }"
+            :icon="Upload"
+            size="small"
+            type="primary"
+            @click="exportWildcards"
+        >
+            Export Prompt
+        </ElButton>
+        <ElUpload
+            v-model:file-list="fileList"
+            accept=".json"
+            :auto-upload="true"
+            :show-file-list="false"
+            :http-request="importWildcards"
+        >
+            <ElButton
+                :class="{ 'dark-button-primary': isDark }"
+                :icon="Download"
+                size="small"
+                type="primary"
+            >
+                Import Prompt
+            </ElButton>
+        </ElUpload>
     </ElRow>
 
     <ElRow>
@@ -327,5 +387,20 @@ p.wildcard-selected:hover {
 
 .wildcard-renaming {
     padding: 2px;
+}
+
+.dark-button-primary {
+    --el-button-bg-color: var(--el-color-primary-light-3);
+    --el-button-border-color: var(--el-color-primary-light-5);
+}
+
+.dark-button-success {
+    --el-button-bg-color: var(--el-color-success-light-3);
+    --el-button-border-color: var(--el-color-success-light-5);
+}
+
+.dark-button-warning {
+    --el-button-bg-color: var(--el-color-warning-light-3);
+    --el-button-border-color: var(--el-color-warning-light-5);
 }
 </style>
