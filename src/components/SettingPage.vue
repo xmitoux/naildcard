@@ -65,7 +65,12 @@ const onSelectDanbooruTag = (tag: string) => {
 };
 
 const formatedDanbooruTag = computed(() => {
-    return danbooruTag.value.replaceAll('(', '\\(').replaceAll(')', '\\)');
+    // (), <>をエスケープする
+    return danbooruTag.value
+        .replaceAll('(', '\\(')
+        .replaceAll(')', '\\)')
+        .replaceAll('<', '\\<')
+        .replaceAll('>', '\\>');
 });
 
 const moveFocusAfterTagInsertion = ref(false);
