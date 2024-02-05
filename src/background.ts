@@ -3,7 +3,7 @@ import { ACTION_GET_SETTINGS } from './constants/chrome';
 const defaultSettings: Settings = {
     naildcardEnabled: false,
     prompt: '',
-    wildcards: '',
+    wildcards: {},
     danbooruTagHistories: '[]',
 };
 

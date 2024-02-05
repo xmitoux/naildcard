@@ -18,30 +18,25 @@ import { Postcard, Memo, Edit, MagicStick, Sunny, Moon } from '@element-plus/ico
 import PromptTextarea from '@/components/PromptTextarea.vue';
 import WildcardManager from '@/components/WildcardManager.vue';
 import DanbooruTagHelper from '@/components/DanbooruTagHelper.vue';
-import { ACTION_UPDATE_SETTINGS } from '@/constants/chrome';
 import { DANBOORU_URL } from '@/constants/danbooru';
-import { NAI_URL } from '@/constants/nai';
 import { insertDanbooruTagToTextarea } from '@/utils/utils';
+import { getStorage, saveStorage } from '@/utils/chrome-api';
 
 const currentSettings = ref<Settings>({
     naildcardEnabled: false,
     prompt: '',
-    wildcards: '',
+    wildcards: {},
     danbooruTagHistories: '[]',
 });
 
-onMounted(async () => {
-    const storageSettings = await chrome.storage.local.get();
-    currentSettings.value = { ...currentSettings.value, ...storageSettings };
+onMounted(() => {
+    getStorage((settings) => {
+        currentSettings.value = { ...currentSettings.value, ...settings };
+    });
 });
 
-const saveSettings = async () => {
-    await chrome.storage.local.set(currentSettings.value);
-
-    const [tab] = await chrome.tabs.query({ url: NAI_URL });
-    if (tab && tab.id) {
-        await chrome.tabs.sendMessage(tab.id, { action: ACTION_UPDATE_SETTINGS });
-    }
+const saveSettings = () => {
+    saveStorage(currentSettings.value);
 };
 
 const savePrompt = (changedPrompt: string) => {
@@ -49,9 +44,7 @@ const savePrompt = (changedPrompt: string) => {
     saveSettings();
 };
 
-const isWildcardManagerMode = ref(true);
-
-const saveWildcard = (changedWildcard: string) => {
+const saveWildcard = (changedWildcard: WildcardMap) => {
     currentSettings.value.wildcards = changedWildcard;
     saveSettings();
 };
@@ -314,26 +307,11 @@ const darkMode = ref(isDark.value);
             </ElTabPane>
 
             <ElTabPane label="🃏Wildcard" name="Wildcard">
-                <ElSwitch
-                    v-model="isWildcardManagerMode"
-                    inactive-text="Simple"
-                    active-text="Manager"
+                <WildcardManager
+                    ref="wildcardManagerRef"
+                    :wildcards="currentSettings.wildcards"
+                    @change="saveWildcard"
                 />
-
-                <template v-if="isWildcardManagerMode">
-                    <WildcardManager
-                        ref="wildcardManagerRef"
-                        :wildcards-string-prop="currentSettings.wildcards"
-                        @change="saveWildcard"
-                    />
-                </template>
-
-                <template v-else>
-                    <PromptTextarea
-                        :prompt-text-prop="currentSettings.wildcards"
-                        @change="saveWildcard"
-                    />
-                </template>
             </ElTabPane>
         </ElTabs>
     </div>

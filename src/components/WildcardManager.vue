@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watchEffect, computed, nextTick, watch } from 'vue';
+import { ref, computed, nextTick, watch, watchEffect } from 'vue';
 import { Check, Checked, Close, DeleteFilled, EditPen, List } from '@element-plus/icons-vue';
 import {
     ElButton,
@@ -13,14 +13,14 @@ import {
 } from 'element-plus';
 import PromptTextarea from '@/components/PromptTextarea.vue';
 import { useClipboardCopy } from '@/composables/useClipboardCopy';
-import { insertDanbooruTagToTextarea, parseWildcardsString } from '@/utils/utils';
+import { insertDanbooruTagToTextarea } from '@/utils/utils';
 
 const props = defineProps<{
-    wildcardsStringProp: string;
+    wildcards: WildcardMap;
 }>();
 
 const emit = defineEmits<{
-    change: [changedWildcardsString: string];
+    change: [changedWildcards: WildcardMap];
 }>();
 
 // 親がタグ挿入を実行するためのexpose
@@ -45,14 +45,12 @@ defineExpose({
     selectedWildcard,
 });
 
-const wildcardsString = ref('');
+const wildcardsWork = ref<WildcardMap>({});
 
 // 起動時の設定読み込みを監視
 watchEffect(() => {
-    wildcardsString.value = props.wildcardsStringProp;
+    wildcardsWork.value = props.wildcards;
 });
-
-const wildcardsObj = computed<WildcardMap>(() => parseWildcardsString(wildcardsString.value));
 
 const selectWildcard = (wildcardKey: string) => {
     selectedWildcard.value = wildcardKey;
@@ -67,7 +65,7 @@ const selectedWildcardString = computed<string>(() => {
     if (!selectedWildcard.value) {
         return '';
     }
-    return wildcardsObj.value[selectedWildcard.value]?.join('\n') || '';
+    return wildcardsWork.value[selectedWildcard.value]?.join('\n') || '';
 });
 
 const isWildcardSelected = (wildcardKey: string) => wildcardKey === selectedWildcard.value;
@@ -89,13 +87,13 @@ const addWildcard = (addingWildcardKey: string): boolean => {
         return false;
     }
 
-    wildcardsObj.value[addingWildcardKey] = [];
+    wildcardsWork.value[addingWildcardKey] = [];
     selectedWildcard.value = addingWildcardKey;
 
     return true;
 };
 
-const invalidWildcardNameChars = ['(', ')', '<', '>', '$', '#', '__', ':'];
+const invalidWildcardNameChars = ['(', ')', '<', '>', '$', '#', '__'];
 const validateWildcardName = (name: string): boolean => {
     if (!name) {
         return false;
@@ -106,7 +104,7 @@ const validateWildcardName = (name: string): boolean => {
         return false;
     }
 
-    if (Object.keys(wildcardsObj.value).includes(name)) {
+    if (Object.keys(wildcardsWork.value).includes(name)) {
         ElMessage.warning('Wildcard already exists!');
         return false;
     }
@@ -115,7 +113,7 @@ const validateWildcardName = (name: string): boolean => {
 };
 
 const deleteWildcard = (wildcardKey: string) => {
-    delete wildcardsObj.value[wildcardKey];
+    delete wildcardsWork.value[wildcardKey];
     saveWildcard();
 
     // ワイルドカード削除不具合対応
@@ -131,38 +129,12 @@ const editWildcardString = (changedWildcardString: string) => {
     }
 
     const wildcardStrings = changedWildcardString.split('\n');
-
-    if (wildcardStrings.some((str) => str.endsWith(':'))) {
-        ElMessage.error("Variants ending with ':' are not allowed! Changes will not be saved!");
-        return;
-    }
-
-    wildcardsObj.value[selectedWildcard.value] = wildcardStrings;
+    wildcardsWork.value[selectedWildcard.value] = wildcardStrings;
     saveWildcard();
 };
 
 const saveWildcard = () => {
-    const parseWildcardsObject = (obj: WildcardMap): string => {
-        let result = '';
-
-        // キーを昇順でソート
-        const sortedKeys = Object.keys(obj).sort();
-
-        for (const key of sortedKeys) {
-            // キーを追加
-            result += `${key}:\n`;
-
-            // 配列の各値を追加
-            for (const value of obj[key]) {
-                result += `${value}\n`;
-            }
-        }
-
-        return result.replace(/\n$/, '');
-    };
-
-    wildcardsString.value = parseWildcardsObject(wildcardsObj.value);
-    emit('change', wildcardsString.value);
+    emit('change', wildcardsWork.value);
 };
 
 const renamingWildcard = ref('');
@@ -189,8 +161,8 @@ const saveRenamingWildcard = () => {
     }
 
     if (addWildcard(renamedWildcard.value)) {
-        wildcardsObj.value[renamedWildcard.value] = wildcardsObj.value[renamingWildcard.value];
-        delete wildcardsObj.value[renamingWildcard.value];
+        wildcardsWork.value[renamedWildcard.value] = wildcardsWork.value[renamingWildcard.value];
+        delete wildcardsWork.value[renamingWildcard.value];
         saveWildcard();
 
         // リネーム後を選択状態にするために保持
@@ -208,7 +180,7 @@ const cancelRenamingWildcard = () => {
     renameWildcardInputRef.value = null;
 };
 
-const sortedWildcard = computed<string[]>(() => Object.keys(wildcardsObj.value).sort());
+const sortedWildcard = computed<string[]>(() => Object.keys(wildcardsWork.value).sort());
 
 const onRenameInputFocus = () => {
     const input = renameWildcardInputRef.value![0].input!;

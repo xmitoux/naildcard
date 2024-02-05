@@ -1,7 +1,7 @@
 type Settings = {
     naildcardEnabled: boolean;
     prompt: string;
-    wildcards: string;
+    wildcards: WildcardMap;
     danbooruTagHistories: string;
 };
 
