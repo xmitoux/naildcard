@@ -3,9 +3,11 @@ import { ref, onMounted, computed } from 'vue';
 import { useDark, useToggle } from '@vueuse/core';
 import {
     ElButton,
+    ElCol,
     ElForm,
     ElFormItem,
     ElOption,
+    ElRow,
     ElSelect,
     ElSpace,
     ElSwitch,
@@ -181,147 +183,155 @@ const darkMode = ref(isDark.value);
 </script>
 
 <template>
-    <h1>⚙️ Naildcard Settings</h1>
-    <ElForm inline label-position="top" label-width="250px">
-        <ElFormItem label="Enabled">
-            <ElSwitch v-model="currentSettings.naildcardEnabled" @change="saveSettings" />
-        </ElFormItem>
+    <div style="height: 18vh">
+        <ElRow>
+            <ElCol :span="6">
+                <h2>⚙️ Naildcard Settings</h2>
+                <ElForm inline label-position="top" label-width="250px">
+                    <ElFormItem label="Enabled">
+                        <ElSwitch
+                            v-model="currentSettings.naildcardEnabled"
+                            @change="saveSettings"
+                        />
+                    </ElFormItem>
 
-        <ElFormItem label="Dark Mode">
-            <ElSwitch
-                v-model="darkMode"
-                :active-action-icon="Moon"
-                :inactive-action-icon="Sunny"
-                @change="toggleDark()"
-            />
-        </ElFormItem>
-    </ElForm>
+                    <ElFormItem label="Dark Mode">
+                        <ElSwitch
+                            v-model="darkMode"
+                            :active-action-icon="Moon"
+                            :inactive-action-icon="Sunny"
+                            @change="toggleDark()"
+                        />
+                    </ElFormItem>
+                </ElForm>
+            </ElCol>
+            <ElCol :span="18">
+                <h2>📦 Danbooru Tag Helper</h2>
 
-    <h2>📦 Danbooru Tag Helper</h2>
+                <ElForm inline label-position="top">
+                    <ElFormItem label="Focus After Tag Insertion">
+                        <ElSwitch
+                            v-model="moveFocusAfterTagInsertion"
+                            inactive-text="Input"
+                            active-text="Prompt"
+                        />
+                    </ElFormItem>
 
-    <ElForm inline label-position="top">
-        <ElFormItem label="Focus After Tag Insertion">
-            <ElSwitch
-                v-model="moveFocusAfterTagInsertion"
-                inactive-text="Input"
-                active-text="Prompt"
-            />
-        </ElFormItem>
+                    <ElFormItem label="Search Only General Tags">
+                        <ElSwitch v-model="searchOnlyGeneralTags" />
+                    </ElFormItem>
 
-        <ElFormItem label="Insert Comma At">
-            <ElSelect v-model="commaInsertPosition" placeholder="Select">
-                <ElOption
-                    v-for="position in commaInsertPositions"
-                    :key="position"
-                    :label="position"
-                    :value="position"
-                />
-            </ElSelect>
-        </ElFormItem>
+                    <ElFormItem label="Insert Comma At">
+                        <ElSelect v-model="commaInsertPosition" placeholder="Select">
+                            <ElOption
+                                v-for="position in commaInsertPositions"
+                                :key="position"
+                                :label="position"
+                                :value="position"
+                            />
+                        </ElSelect>
+                    </ElFormItem>
+                </ElForm>
 
-        <ElFormItem label="Search Only General Tags">
-            <ElSwitch v-model="searchOnlyGeneralTags" />
-        </ElFormItem>
-    </ElForm>
+                <ElForm @submit.prevent>
+                    <ElFormItem>
+                        <ElSpace>
+                            <DanbooruTagHelper
+                                ref="danbooruTagHelperRef"
+                                :saved-tag-histories="currentSettings.danbooruTagHistories"
+                                :options="{ searchOnlyGeneralTags }"
+                                @change-histories="onChangeDanbooruTagHistories"
+                                @select="onSelectDanbooruTag"
+                                @send="onSendDanbooruTag"
+                            />
 
-    <ElForm @submit.prevent>
-        <ElFormItem>
-            <ElSpace>
-                <DanbooruTagHelper
-                    ref="danbooruTagHelperRef"
-                    :saved-tag-histories="currentSettings.danbooruTagHistories"
-                    :options="{ searchOnlyGeneralTags }"
-                    @change-histories="onChangeDanbooruTagHistories"
-                    @select="onSelectDanbooruTag"
-                    @send="onSendDanbooruTag"
-                />
+                            <template v-if="activeTabName === 'Prompt'">
+                                <ElButton
+                                    :class="{ 'dark-button-primary': isDark }"
+                                    :disabled="!danbooruTag"
+                                    :icon="Edit"
+                                    type="primary"
+                                    style="width: 200px"
+                                    v-show="activeTabName === 'Prompt'"
+                                    @click="insertDanbooruTagToPrompt()"
+                                >
+                                    Insert Tag to Prompt
+                                </ElButton>
+                            </template>
+                            <template v-else>
+                                <ElButton
+                                    :class="{ 'dark-button-success': isDark }"
+                                    :disabled="
+                                        !danbooruTag || !wildcardManagerRef?.selectedWildcard
+                                    "
+                                    :icon="Postcard"
+                                    type="success"
+                                    style="width: 200px"
+                                    v-show="activeTabName === 'Wildcard'"
+                                    @click="insertDanbooruTagToWildcard()"
+                                >
+                                    Insert Tag to Wildcard
+                                </ElButton>
+                            </template>
+                            <ElButton
+                                :class="{ 'dark-button-warning': isDark }"
+                                :disabled="!danbooruTag"
+                                type="warning"
+                                :icon="Memo"
+                                @click="referToWiki"
+                            >
+                                Refer to Wiki
+                            </ElButton>
+                        </ElSpace>
+                    </ElFormItem>
+                </ElForm>
+            </ElCol>
+        </ElRow>
+    </div>
 
-                <template v-if="activeTabName === 'Prompt'">
-                    <ElButton
-                        :class="{ 'dark-button-primary': isDark }"
-                        :disabled="!danbooruTag"
-                        :icon="Edit"
-                        type="primary"
-                        style="width: 200px"
-                        v-show="activeTabName === 'Prompt'"
-                        @click="insertDanbooruTagToPrompt()"
-                    >
-                        Insert Tag to Prompt
-                    </ElButton>
-                </template>
-                <template v-else>
-                    <ElButton
-                        :class="{ 'dark-button-success': isDark }"
-                        :disabled="!danbooruTag || !wildcardManagerRef?.selectedWildcard"
-                        :icon="Postcard"
-                        type="success"
-                        style="width: 200px"
-                        v-show="activeTabName === 'Wildcard'"
-                        @click="insertDanbooruTagToWildcard()"
-                    >
-                        Insert Tag to Wildcard
-                    </ElButton>
-                </template>
+    <div style="height: 75vh">
+        <ElTabs v-model="activeTabName" type="card">
+            <ElTabPane label="📝Dynamic Prompt" name="Prompt">
                 <ElButton
-                    :class="{ 'dark-button-warning': isDark }"
-                    :disabled="!danbooruTag"
-                    type="warning"
-                    :icon="Memo"
-                    @click="referToWiki"
-                >
-                    Refer to Wiki
-                </ElButton>
-            </ElSpace>
-        </ElFormItem>
-    </ElForm>
-
-    <ElTabs v-model="activeTabName" type="card">
-        <ElTabPane label="📝Dynamic Prompt" name="Prompt">
-            <PromptTextarea
-                ref="promptTextareaRef"
-                :prompt-text-prop="currentSettings.prompt"
-                :rows="20"
-                @change="savePrompt"
-                @intellisense="onIntelliSense"
-            />
-
-            <ElButton
-                :class="{ 'dark-button-primary': isDark }"
-                :icon="MagicStick"
-                type="primary"
-                style="margin-top: 5px"
-                @click="formatPrompt"
-            />
-        </ElTabPane>
-
-        <ElTabPane label="🃏Wildcard" name="Wildcard">
-            <ElForm label-position="top">
-                <ElFormItem label="Editor Mode">
-                    <ElSwitch
-                        v-model="isWildcardManagerMode"
-                        inactive-text="Simple"
-                        active-text="Manager"
-                    />
-                </ElFormItem>
-            </ElForm>
-
-            <template v-if="isWildcardManagerMode">
-                <WildcardManager
-                    ref="wildcardManagerRef"
-                    :wildcards-string-prop="currentSettings.wildcards"
-                    @change="saveWildcard"
+                    :class="{ 'dark-button-primary': isDark }"
+                    :icon="MagicStick"
+                    type="primary"
+                    size="small"
+                    style="margin-bottom: 5px"
+                    @click="formatPrompt"
                 />
-            </template>
-
-            <template v-else>
                 <PromptTextarea
-                    :prompt-text-prop="currentSettings.wildcards"
-                    :rows="20"
-                    @change="saveWildcard"
+                    ref="promptTextareaRef"
+                    :prompt-text-prop="currentSettings.prompt"
+                    @change="savePrompt"
+                    @intellisense="onIntelliSense"
                 />
-            </template>
-        </ElTabPane>
-    </ElTabs>
+            </ElTabPane>
+
+            <ElTabPane label="🃏Wildcard" name="Wildcard">
+                <ElSwitch
+                    v-model="isWildcardManagerMode"
+                    inactive-text="Simple"
+                    active-text="Manager"
+                />
+
+                <template v-if="isWildcardManagerMode">
+                    <WildcardManager
+                        ref="wildcardManagerRef"
+                        :wildcards-string-prop="currentSettings.wildcards"
+                        @change="saveWildcard"
+                    />
+                </template>
+
+                <template v-else>
+                    <PromptTextarea
+                        :prompt-text-prop="currentSettings.wildcards"
+                        @change="saveWildcard"
+                    />
+                </template>
+            </ElTabPane>
+        </ElTabs>
+    </div>
 </template>
 
 <style scoped>
@@ -338,5 +348,9 @@ const darkMode = ref(isDark.value);
 .dark-button-warning {
     --el-button-bg-color: var(--el-color-warning-light-3);
     --el-button-border-color: var(--el-color-warning-light-5);
+}
+
+:deep(.el-tabs__header) {
+    margin: 0;
 }
 </style>

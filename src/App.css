@@ -1,5 +1,8 @@
 html,
-body,
+body {
+    margin: 0;
+}
+
 #app {
-    margin: 10px 20px;
+    margin: 3vh 20vh;
 }

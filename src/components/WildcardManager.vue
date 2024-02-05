@@ -222,7 +222,7 @@ const { copying, copyToClipboard } = useClipboardCopy();
 <template>
     <!-- 追加エリア -->
     <ElRow>
-        <ElCol :span="9">
+        <ElCol :span="4">
             <ElInput
                 v-model="newWildcardKey"
                 clearable
@@ -239,7 +239,7 @@ const { copying, copyToClipboard } = useClipboardCopy();
     <ElRow>
         <!-- 選択エリア -->
         <ElCol :span="9">
-            <ElScrollbar :max-height="325">
+            <ElScrollbar max-height="65vh">
                 <p
                     v-for="wildcardKey in sortedWildcard"
                     :class="{
@@ -320,7 +320,6 @@ const { copying, copyToClipboard } = useClipboardCopy();
             <PromptTextarea
                 v-show="selectedWildcard"
                 ref="wildcardTextareaRef"
-                :rows="15"
                 :prompt-text-prop="selectedWildcardString"
                 @change="editWildcardString"
             />

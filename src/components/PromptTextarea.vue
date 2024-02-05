@@ -11,7 +11,6 @@ import { useToggleComment } from '@/composables/useToggleComment';
 
 const props = defineProps<{
     promptTextProp: string;
-    rows: number;
 }>();
 
 const promptText = ref('');
@@ -56,10 +55,15 @@ watch(promptText, () => emit('change', promptText.value));
         ref="textareaRef"
         type="textarea"
         resize="none"
-        :rows="props.rows"
         @change="emit('change', promptText)"
         @keydown="handleKeydown"
         @keydown.ctrl.space.prevent="emit('intellisense')"
         @beforeinput="autoBracket"
     />
 </template>
+
+<style scoped>
+:deep(.el-textarea__inner) {
+    height: 65vh;
+}
+</style>
