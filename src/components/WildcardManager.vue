@@ -215,6 +215,9 @@ const { importSettings, exportSetting, fileList } = useFileImportExport();
 const exportWildcards = () =>
     exportSetting(JSON.stringify(wildcardsWork.value), 'wildcards', 'json');
 const importWildcards: UploadRequestHandler = async (options: UploadRequestOptions) => {
+    selectedWildcard.value = null;
+    cancelRenamingWildcard();
+
     const loadWildcard = (wildcardJson: string, settings: Settings) => {
         const wildcards = JSON.parse(wildcardJson);
         settings.wildcards = wildcards;
