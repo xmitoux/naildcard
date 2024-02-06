@@ -35,6 +35,7 @@ import { insertDanbooruTagToTextarea } from '@/utils/utils';
 import { getStorage, saveStorage } from '@/utils/chrome-api';
 import { defaultSettings } from '@/background';
 import { useFileImportExport } from '@/composables/useFileImportExport';
+import PngInfo from '@/components/PngInfo.vue';
 
 const isDark = useDark();
 const toggleDark = useToggle(isDark);
@@ -365,6 +366,7 @@ const exportPrompt = () => exportSetting(currentSettings.value.prompt, 'dynamic-
                     @intellisense="onIntelliSense"
                 />
             </ElTabPane>
+            <ElTabPane label="ℹ️PNG Info" name="PNG Info"><PngInfo /></ElTabPane>
         </ElTabs>
     </div>
 </template>
