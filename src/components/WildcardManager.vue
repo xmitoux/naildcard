@@ -8,6 +8,7 @@ import {
     Download,
     EditPen,
     List,
+    Filter,
     Upload,
 } from '@element-plus/icons-vue';
 import {
@@ -94,8 +95,14 @@ const newWildcardKey = ref<string>('');
 const newWildcardKeyTrim = computed(() => newWildcardKey.value.trim());
 const addNewWildcard = () => {
     if (addWildcard(newWildcardKeyTrim.value)) {
-        newWildcardKey.value = '';
         saveWildcard();
+
+        if (!sortedWildcard.value.includes(newWildcardKeyTrim.value)) {
+            // 追加したワイルドカードがフィルタ結果に含まれない場合はフィルタを解除
+            filterQuery.value = '';
+        }
+
+        newWildcardKey.value = '';
         nextTick(() => wildcardTextareaRef.value?.textareaRef.textarea.focus());
     }
 };
@@ -189,6 +196,11 @@ const saveRenamingWildcard = (event: Event) => {
 
         selectWildcard(renamedWildcardName);
 
+        if (!sortedWildcard.value.includes(renamedWildcardName)) {
+            // リネームしたワイルドカードがフィルタ結果に含まれない場合はフィルタを解除
+            filterQuery.value = '';
+        }
+
         // リネーム不具合対応
         // (確定ボタンをクリックするとpタグのclickイベントが発生し、リネーム前のゾンビが残る
         // 確定ボタンの@click.stopがなぜか効かないのでstopPropagation)
@@ -202,7 +214,32 @@ const cancelRenamingWildcard = () => {
     renameWildcardInputRef.value = null;
 };
 
-const sortedWildcard = computed<string[]>(() => Object.keys(wildcardsWork.value).sort());
+const filterQuery = ref('');
+const sortedWildcard = computed<string[]>(() => {
+    const wildcards = Object.keys(wildcardsWork.value);
+
+    const filteredWildcards = wildcards.filter((wildcard: string): boolean => {
+        const wildcardLowerCase = wildcard.toLowerCase();
+        const query = filterQuery.value;
+
+        let queryIndex = 0;
+        for (let i = 0; i < wildcardLowerCase.length && queryIndex < query.length; i++) {
+            if (wildcardLowerCase[i] === query[queryIndex]) {
+                queryIndex++;
+            }
+        }
+        return queryIndex === query.length;
+    });
+
+    return filteredWildcards.sort();
+});
+
+const onInputFilter = () => {
+    if (selectedWildcard.value && !sortedWildcard.value.includes(selectedWildcard.value)) {
+        // 選択中のワイルドカードがフィルタ結果に含まれない場合は選択を解除
+        selectedWildcard.value = null;
+    }
+};
 
 const onRenameInputFocus = () => {
     const input = renameWildcardInputRef.value![0].input!;
@@ -234,7 +271,7 @@ const importWildcards: UploadRequestHandler = async (options: UploadRequestOptio
 <template>
     <!-- 追加エリア -->
     <ElRow style="margin: 10px 0">
-        <ElCol :span="9">
+        <ElCol :span="5">
             <div style="margin-right: 5px">
                 <ElInput
                     v-model="newWildcardKey"
@@ -253,6 +290,19 @@ const importWildcards: UploadRequestHandler = async (options: UploadRequestOptio
                         </ElButton>
                     </template>
                 </ElInput>
+            </div>
+        </ElCol>
+
+        <ElCol :span="4">
+            <div style="margin-right: 5px">
+                <ElInput
+                    v-model="filterQuery"
+                    clearable
+                    placeholder="Filter Wildcard"
+                    :prefix-icon="Filter"
+                    size="small"
+                    @input="onInputFilter"
+                />
             </div>
         </ElCol>
 
@@ -398,7 +448,7 @@ const importWildcards: UploadRequestHandler = async (options: UploadRequestOptio
 .edit-buttons {
     position: absolute;
     right: 15px;
-    top: 2px;
+    top: 3px;
 }
 
 p {
@@ -412,12 +462,12 @@ p {
 }
 
 p:hover {
-    background-color: var(--el-color-info);
+    background-color: var(--el-color-info-light-7);
 }
 
 .wildcard-selected,
 p.wildcard-selected:hover {
-    background-color: var(--el-color-primary-light-3);
+    background-color: var(--el-color-primary-light-5);
 }
 
 .wildcard-renaming {
