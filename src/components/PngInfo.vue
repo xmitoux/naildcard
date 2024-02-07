@@ -31,11 +31,11 @@ type PngMetaData = {
     noise?: number;
 };
 
-const pngMetaData = ref<PngMetaData>();
 const fileList = ref<UploadUserFile[]>([]);
 
-const loadPngImage: UploadRequestHandler = async (options: UploadRequestOptions) => {
-    const file = options.file;
+const imageUrl = ref('');
+const pngMetaData = ref<PngMetaData>();
+const loadImage = (file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
         const buffer = e.target!.result as ArrayBuffer;
@@ -51,7 +51,39 @@ const loadPngImage: UploadRequestHandler = async (options: UploadRequestOptions)
     };
     reader.readAsArrayBuffer(file);
 };
-const imageUrl = ref('');
+
+const handleUploadImage: UploadRequestHandler = async (options: UploadRequestOptions) => {
+    const file = options.file;
+    loadImage(file);
+};
+
+const fileInput = ref<HTMLInputElement | null>(null);
+const openImagePicker = () => {
+    fileInput.value?.click();
+};
+
+const handleImageChange = (event: Event) => {
+    const files = (event.target as HTMLInputElement).files;
+    if (files && files[0]) {
+        loadImage(files[0]);
+    }
+};
+
+const handleDragOver = (event: DragEvent) => {
+    event.preventDefault();
+};
+
+const handleDropImage = (event: DragEvent) => {
+    event.preventDefault();
+
+    if (event.dataTransfer?.files) {
+        const file = event.dataTransfer.files[0];
+
+        if (file.type.startsWith('image/')) {
+            loadImage(file);
+        }
+    }
+};
 
 const activeTabName = ref('Positive');
 </script>
@@ -64,7 +96,7 @@ const activeTabName = ref('Positive');
                 v-model:file-list="fileList"
                 accept=".png"
                 drag
-                :http-request="loadPngImage"
+                :http-request="handleUploadImage"
                 :show-file-list="false"
             >
                 <div
@@ -80,14 +112,28 @@ const activeTabName = ref('Positive');
                     <div class="el-upload__text">Drop png image file here or click to upload</div>
                 </div>
             </ElUpload>
-            <div v-show="fileList.length" style="position: relative">
+
+            <div
+                v-show="fileList.length"
+                style="position: relative; cursor: pointer"
+                @click="openImagePicker"
+                @dragover="handleDragOver"
+                @drop="handleDropImage"
+            >
                 <ElImage alt="Preview Image" fit="contain" :src="imageUrl" w-full />
                 <ElButton
                     style="position: absolute; top: 5px; right: 5px"
                     circle
                     :icon="Close"
                     type="info"
-                    @click="fileList = []"
+                    @click.stop="fileList = []"
+                />
+                <input
+                    style="display: none"
+                    ref="fileInput"
+                    accept=".png"
+                    type="file"
+                    @change="handleImageChange"
                 />
             </div>
         </ElCol>
