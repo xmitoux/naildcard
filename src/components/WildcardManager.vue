@@ -232,16 +232,19 @@ const importWildcards: UploadRequestHandler = async (options: UploadRequestOptio
 
 <template>
     <!-- 追加エリア -->
-    <ElRow style="margin-top: 5px">
+    <ElRow style="margin: 10px 0">
         <ElCol :span="8">
             <ElInput
                 v-model="newWildcardKey"
                 clearable
                 placeholder="New Wildcard"
+                size="small"
                 @keydown.prevent.enter="addNewWildcard"
             >
                 <template #append>
-                    <ElButton :disabled="!newWildcardKeyTrim" @click="addNewWildcard">Add</ElButton>
+                    <ElButton :disabled="!newWildcardKeyTrim" size="small" @click="addNewWildcard">
+                        Add
+                    </ElButton>
                 </template>
             </ElInput>
         </ElCol>

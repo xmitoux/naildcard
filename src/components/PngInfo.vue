@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { getMetadata } from 'meta-png';
 import {
+    ElButton,
     ElCol,
     ElIcon,
     ElImage,
@@ -13,7 +14,7 @@ import {
     UploadRequestOptions,
     UploadUserFile,
 } from 'element-plus';
-import { PictureFilled } from '@element-plus/icons-vue';
+import { Close, PictureFilled } from '@element-plus/icons-vue';
 
 type PngMetaData = {
     prompt: string;
@@ -56,29 +57,42 @@ const activeTabName = ref('Positive');
 </script>
 
 <template>
-    <ElRow>
-        <ElCol :span="8">
+    <ElRow style="margin-top: 10px" :gutter="65">
+        <ElCol :span="9">
             <ElUpload
                 v-show="!fileList.length"
                 v-model:file-list="fileList"
                 accept=".png"
                 drag
                 :http-request="loadPngImage"
+                :show-file-list="false"
             >
-                <ElIcon class="el-icon--upload"><PictureFilled /></ElIcon>
-                <div class="el-upload__text">Drop png image file here or click to upload</div>
+                <div
+                    style="
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        height: 65vh;
+                    "
+                >
+                    <ElIcon class="el-icon--upload"><PictureFilled /></ElIcon>
+                    <div class="el-upload__text">Drop png image file here or click to upload</div>
+                </div>
             </ElUpload>
-            <ElImage
-                v-show="fileList.length"
-                style="width: 50vh; height: 60vh"
-                alt="Preview Image"
-                fit="contain"
-                :src="imageUrl"
-                w-full
-            />
+            <div v-show="fileList.length" style="position: relative">
+                <ElImage alt="Preview Image" fit="contain" :src="imageUrl" w-full />
+                <ElButton
+                    style="position: absolute; top: 5px; right: 5px"
+                    circle
+                    :icon="Close"
+                    type="info"
+                    @click="fileList = []"
+                />
+            </div>
         </ElCol>
 
-        <ElCol :span="16">
+        <ElCol v-show="fileList.length" :span="15">
             <ElTabs v-model="activeTabName" tab-position="left">
                 <ElTabPane label="Positive" name="Positive">
                     <div class="text-container">
@@ -99,12 +113,20 @@ const activeTabName = ref('Positive');
 </template>
 
 <style scoped>
+:deep(.el-upload-dragger) {
+    height: 69vh;
+    padding: 0;
+}
+
+:deep(.el-upload__text) {
+    user-select: none;
+}
+
 .text-container {
-    height: 60vh;
-    padding: 20px;
-    margin: 20px 0;
+    height: 67vh;
+    padding: 7px 10px;
     border-radius: 5px;
-    border: 1px solid #ccc;
+    border: var(--el-border);
     font-size: 14px;
     line-height: 1.3;
     word-wrap: break-word;

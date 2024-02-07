@@ -6,3 +6,10 @@ body {
 #app {
     margin: 3vh 10vh;
 }
+
+h1,
+h2,
+label,
+span {
+    user-select: none;
+}

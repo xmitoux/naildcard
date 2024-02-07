@@ -312,7 +312,7 @@ const exportPrompt = () => exportSetting(currentSettings.value.prompt, 'dynamic-
     <div style="height: 70vh">
         <ElTabs v-model="activeTabName" type="card">
             <ElTabPane label="📝Dynamic Prompt" name="Prompt">
-                <ElRow style="margin: 5px 0">
+                <ElRow style="margin: 10px 0">
                     <ElButton
                         :class="{ 'dark-button-primary': isDark }"
                         :icon="MagicStick"
@@ -389,5 +389,6 @@ const exportPrompt = () => exportSetting(currentSettings.value.prompt, 'dynamic-
 
 :deep(.el-tabs__header) {
     margin: 0;
+    user-select: none;
 }
 </style>
