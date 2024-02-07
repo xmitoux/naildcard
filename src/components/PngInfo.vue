@@ -182,10 +182,9 @@ Noise Schedule: ${metaData.noise_schedule}
     </ElRow>
 
     <ElRow>
-        <ElCol :span="7">
+        <ElCol v-if="!fileList.length" :span="24">
             <!-- 画像アップロードエリア -->
             <ElUpload
-                v-show="!fileList.length"
                 v-model:file-list="fileList"
                 accept=".png"
                 drag
@@ -197,64 +196,67 @@ Noise Schedule: ${metaData.noise_schedule}
                     <h3>Drop NAI image file here or click to upload</h3>
                 </div>
             </ElUpload>
-
-            <!-- 画像表示エリア -->
-            <div
-                v-show="fileList.length"
-                class="image-container"
-                @click="openImagePicker"
-                @dragover="handleDragOver"
-                @drop="handleDropImage"
-            >
-                <ElImage alt="Preview Image" fit="contain" :src="imageUrl" />
-                <ElButton
-                    class="image-close-button"
-                    circle
-                    :icon="Close"
-                    type="info"
-                    size="small"
-                    @click.stop="fileList = []"
-                />
-                <!-- 画像表示時のアップロードinput -->
-                <input
-                    style="display: none"
-                    ref="fileInput"
-                    accept=".png"
-                    type="file"
-                    @change="handleImageChange"
-                />
-            </div>
         </ElCol>
 
-        <!-- PNG Info エリア -->
-        <ElCol v-show="fileList.length" :span="17">
-            <ElTabs v-if="pngMetaData" v-model="activeTabName" tab-position="left">
-                <ElTabPane label="Positive" name="Positive">
-                    <div class="text-container">
-                        {{ pngMetaData?.prompt }}
-                    </div>
-                </ElTabPane>
-                <ElTabPane label="Negative" name="Negative">
-                    <div class="text-container">
-                        {{ pngMetaData?.uc }}
-                    </div>
-                </ElTabPane>
-                <ElTabPane label="Other Info" name="Other Info">
-                    <div class="text-container">{{ pngOtherInfo }}</div>
-                </ElTabPane>
-            </ElTabs>
-            <div v-else class="empty-container">
-                <ElEmpty description=" ">
-                    <h3>No Info</h3>
-                </ElEmpty>
-            </div>
-        </ElCol>
+        <template v-else>
+            <ElCol :span="7">
+                <!-- 画像表示エリア -->
+                <div
+                    v-show="fileList.length"
+                    class="image-container"
+                    @click="openImagePicker"
+                    @dragover="handleDragOver"
+                    @drop="handleDropImage"
+                >
+                    <ElImage alt="Preview Image" fit="contain" :src="imageUrl" />
+                    <ElButton
+                        class="image-close-button"
+                        circle
+                        :icon="Close"
+                        type="info"
+                        size="small"
+                        @click.stop="fileList = []"
+                    />
+                    <!-- 画像表示時のアップロードinput -->
+                    <input
+                        style="display: none"
+                        ref="fileInput"
+                        accept=".png"
+                        type="file"
+                        @change="handleImageChange"
+                    />
+                </div>
+            </ElCol>
+
+            <!-- PNG Info エリア -->
+            <ElCol v-show="fileList.length" :span="17">
+                <ElTabs v-if="pngMetaData" v-model="activeTabName" tab-position="left">
+                    <ElTabPane label="Positive" name="Positive">
+                        <div class="text-container">
+                            {{ pngMetaData?.prompt }}
+                        </div>
+                    </ElTabPane>
+                    <ElTabPane label="Negative" name="Negative">
+                        <div class="text-container">
+                            {{ pngMetaData?.uc }}
+                        </div>
+                    </ElTabPane>
+                    <ElTabPane label="Other Info" name="Other Info">
+                        <div class="text-container">{{ pngOtherInfo }}</div>
+                    </ElTabPane>
+                </ElTabs>
+                <div v-else class="empty-container">
+                    <ElEmpty description=" ">
+                        <h3>No Info</h3>
+                    </ElEmpty>
+                </div>
+            </ElCol>
+        </template>
     </ElRow>
 </template>
 
 <style scoped>
 :deep(.el-upload-dragger) {
-    width: 45vh;
     height: 65vh;
     padding: 0;
 }
