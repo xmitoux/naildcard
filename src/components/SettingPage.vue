@@ -271,11 +271,11 @@ const exportPrompt = () => exportSetting(currentSettings.value.prompt, 'dynamic-
                                     :disabled="!danbooruTag"
                                     :icon="Edit"
                                     type="primary"
-                                    style="width: 200px"
+                                    style="width: 100px"
                                     v-show="activeTabName === 'Prompt'"
                                     @click="insertDanbooruTagToPrompt()"
                                 >
-                                    Insert Tag to Prompt
+                                    Insert
                                 </ElButton>
                             </template>
                             <template v-else>
@@ -286,21 +286,22 @@ const exportPrompt = () => exportSetting(currentSettings.value.prompt, 'dynamic-
                                     "
                                     :icon="Postcard"
                                     type="success"
-                                    style="width: 200px"
+                                    style="width: 100px"
                                     v-show="activeTabName === 'Wildcard'"
                                     @click="insertDanbooruTagToWildcard()"
                                 >
-                                    Insert Tag to Wildcard
+                                    Insert
                                 </ElButton>
                             </template>
                             <ElButton
                                 :class="{ 'dark-button-warning': isDark }"
+                                style="width: 100px"
                                 :disabled="!danbooruTag"
                                 type="warning"
                                 :icon="Memo"
                                 @click="referToWiki"
                             >
-                                Refer to Wiki
+                                Wiki
                             </ElButton>
                         </ElSpace>
                     </ElFormItem>
@@ -320,7 +321,7 @@ const exportPrompt = () => exportSetting(currentSettings.value.prompt, 'dynamic-
                         type="primary"
                         @click="formatPrompt"
                     >
-                        Format Prompt
+                        Format
                     </ElButton>
 
                     <ElButton
@@ -330,7 +331,7 @@ const exportPrompt = () => exportSetting(currentSettings.value.prompt, 'dynamic-
                         type="primary"
                         @click="exportPrompt()"
                     >
-                        Export Prompt
+                        Export
                     </ElButton>
                     <ElUpload
                         v-model:file-list="fileList"
@@ -345,7 +346,7 @@ const exportPrompt = () => exportSetting(currentSettings.value.prompt, 'dynamic-
                             size="small"
                             type="primary"
                         >
-                            Import Prompt
+                            Import
                         </ElButton>
                     </ElUpload>
                 </ElRow>

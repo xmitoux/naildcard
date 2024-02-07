@@ -166,18 +166,18 @@ Noise Schedule: ${metaData.noise_schedule}
 
 <template>
     <ElRow style="margin: 10px 0">
-        <ElCol style="height: 24px" :span="7">
+        <ElCol style="height: 24px; margin-right: 115px" :span="7">
             <!-- スペース -->
         </ElCol>
         <ElButton
             v-show="fileList.length && pngMetaData && activeTabName !== 'Other Info'"
-            :class="{ 'dark-button-warning': isDark, 'copy-button': true }"
+            :class="{ 'dark-button-warning': isDark }"
             :icon="copying ? Checked : List"
             size="small"
             type="warning"
             @click="copyPrompt"
         >
-            Copy {{ activeTabName }} Prompt
+            Copy {{ activeTabName }}
         </ElButton>
     </ElRow>
 
@@ -297,12 +297,6 @@ Noise Schedule: ${metaData.noise_schedule}
     word-wrap: break-word;
     white-space: pre-wrap;
     overflow-y: auto;
-}
-
-.copy-button {
-    width: 160px;
-    height: 24px;
-    margin-left: 115px;
 }
 
 .dark-button-warning {

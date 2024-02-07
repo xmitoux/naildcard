@@ -264,7 +264,7 @@ const importWildcards: UploadRequestHandler = async (options: UploadRequestOptio
                 type="success"
                 @click="exportWildcards"
             >
-                Export Wildcards
+                Export
             </ElButton>
             <ElUpload
                 v-model:file-list="fileList"
@@ -279,7 +279,7 @@ const importWildcards: UploadRequestHandler = async (options: UploadRequestOptio
                     size="small"
                     type="success"
                 >
-                    Import Wildcards
+                    Import
                 </ElButton>
             </ElUpload>
         </template>
