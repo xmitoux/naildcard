@@ -14,7 +14,11 @@ import {
     UploadRequestOptions,
     UploadUserFile,
 } from 'element-plus';
-import { Close, PictureFilled } from '@element-plus/icons-vue';
+import { Checked, Close, List, PictureFilled } from '@element-plus/icons-vue';
+import { useDark } from '@vueuse/core';
+import { useClipboardCopy } from '@/composables/useClipboardCopy';
+
+const isDark = useDark();
 
 type PngMetaData = {
     prompt: string;
@@ -85,11 +89,35 @@ const handleDropImage = (event: DragEvent) => {
     }
 };
 
-const activeTabName = ref('Positive');
+type InfoTabName = 'Positive' | 'Negative' | 'Other Info';
+const activeTabName = ref<InfoTabName>('Positive');
+
+const { copying, copyToClipboard } = useClipboardCopy();
+const copyPrompt = () => {
+    copyToClipboard(
+        activeTabName.value === 'Positive' ? pngMetaData.value!.prompt! : pngMetaData.value!.uc!,
+    );
+};
 </script>
 
 <template>
-    <ElRow style="margin-top: 10px" :gutter="65">
+    <ElRow style="margin: 10px 0" :gutter="75">
+        <ElCol :span="11" />
+        <ElCol style="height: 24px" :span="13">
+            <ElButton
+                v-show="fileList.length && activeTabName !== 'Other Info'"
+                :class="{ 'dark-button-warning': isDark, 'copy-button': true }"
+                :icon="copying ? Checked : List"
+                size="small"
+                type="warning"
+                @click="copyPrompt"
+            >
+                Copy {{ activeTabName }} Prompt
+            </ElButton>
+        </ElCol>
+    </ElRow>
+
+    <ElRow :gutter="65">
         <ElCol :span="9">
             <!-- 画像アップロードエリア -->
             <ElUpload
@@ -192,5 +220,17 @@ const activeTabName = ref('Positive');
     word-wrap: break-word;
     white-space: pre-wrap;
     overflow-y: auto;
+}
+
+.copy-button {
+    width: 160px;
+    height: 24px;
+}
+
+.dark-button-warning {
+    --el-button-bg-color: var(--el-color-warning-light-3);
+    --el-button-border-color: var(--el-color-warning-light-5);
+    --el-button-hover-bg-color: var(--el-color-warning-light-7);
+    --el-button-hover-border-color: var(--el-color-warning-light-8);
 }
 </style>
