@@ -14,6 +14,7 @@ import {
     ElButton,
     ElButtonGroup,
     ElCol,
+    ElEmpty,
     ElInput,
     ElMessage,
     ElPopconfirm,
@@ -232,143 +233,168 @@ const importWildcards: UploadRequestHandler = async (options: UploadRequestOptio
 
 <template>
     <!-- 追加エリア -->
-    <ElRow style="margin-top: 5px">
-        <ElCol :span="8">
-            <ElInput
-                v-model="newWildcardKey"
-                clearable
-                placeholder="New Wildcard"
-                @keydown.prevent.enter="addNewWildcard"
-            >
-                <template #append>
-                    <ElButton :disabled="!newWildcardKeyTrim" @click="addNewWildcard">Add</ElButton>
-                </template>
-            </ElInput>
-        </ElCol>
-        <ElCol :span="1">
-            <!-- スペース -->
+    <ElRow style="margin: 10px 0">
+        <ElCol :span="9">
+            <div style="margin-right: 5px">
+                <ElInput
+                    v-model="newWildcardKey"
+                    clearable
+                    placeholder="New Wildcard"
+                    size="small"
+                    @keydown.prevent.enter="addNewWildcard"
+                >
+                    <template #append>
+                        <ElButton
+                            :disabled="!newWildcardKeyTrim"
+                            size="small"
+                            @click="addNewWildcard"
+                        >
+                            Add
+                        </ElButton>
+                    </template>
+                </ElInput>
+            </div>
         </ElCol>
 
-        <ElButton
-            :class="{ 'dark-button-success': isDark }"
-            :icon="Upload"
-            size="small"
-            type="success"
-            @click="exportWildcards"
-        >
-            Export Wildcards
-        </ElButton>
-        <ElUpload
-            v-model:file-list="fileList"
-            accept=".json"
-            :auto-upload="true"
-            :show-file-list="false"
-            :http-request="importWildcards"
-        >
+        <template v-if="selectedWildcard">
             <ElButton
                 :class="{ 'dark-button-success': isDark }"
-                :icon="Download"
+                :icon="Upload"
                 size="small"
                 type="success"
+                @click="exportWildcards"
             >
-                Import Wildcards
+                Export
             </ElButton>
-        </ElUpload>
+            <ElUpload
+                v-model:file-list="fileList"
+                accept=".json"
+                :auto-upload="true"
+                :show-file-list="false"
+                :http-request="importWildcards"
+            >
+                <ElButton
+                    :class="{ 'dark-button-success': isDark }"
+                    :icon="Download"
+                    size="small"
+                    type="success"
+                >
+                    Import
+                </ElButton>
+            </ElUpload>
+        </template>
     </ElRow>
 
     <ElRow>
         <!-- 選択エリア -->
         <ElCol :span="9">
-            <ElScrollbar max-height="65vh">
-                <p
-                    v-for="wildcardKey in sortedWildcard"
-                    :class="{
-                        'wildcard-selected': isWildcardSelected(wildcardKey),
-                        'wildcard-renaming': isWildcardRenaming(wildcardKey),
-                    }"
-                    :key="wildcardKey"
-                    @click="selectWildcard(wildcardKey)"
-                    @dblclick="startRenamingWildcard(wildcardKey)"
-                >
-                    <!-- リネーム -->
-                    <ElInput
-                        v-if="isWildcardRenaming(wildcardKey)"
-                        v-model="renamedWildcard"
-                        @focus="onRenameInputFocus"
-                        @keydown.prevent.enter="saveRenamingWildcard"
-                        @keydown.prevent.esc="cancelRenamingWildcard"
-                        ref="renameWildcardInputRef"
-                    />
-                    <!-- wildcard名 -->
-                    <span v-else>
-                        {{ wildcardKey }}
-                    </span>
-
-                    <!-- 編集ボタン -->
-                    <template v-if="isWildcardSelected(wildcardKey) && !renamingWildcard">
-                        <span class="edit-buttons">
-                            <ElButtonGroup type="info">
-                                <ElButton
-                                    circle
-                                    :icon="copying ? Checked : List"
-                                    @click="copyToClipboard(`__${wildcardKey}__`)"
-                                />
-
-                                <ElButton
-                                    circle
-                                    :icon="EditPen"
-                                    @click="startRenamingWildcard(wildcardKey)"
-                                />
-
-                                <ElPopconfirm
-                                    title="Are you sure to delete?"
-                                    :width="200"
-                                    @confirm="deleteWildcard(wildcardKey)"
-                                >
-                                    <template #reference>
-                                        <ElButton circle :icon="DeleteFilled" type="danger" />
-                                    </template>
-                                </ElPopconfirm>
-                            </ElButtonGroup>
+            <div class="wildcards-container">
+                <ElScrollbar max-height="65vh">
+                    <p
+                        v-for="wildcardKey in sortedWildcard"
+                        :class="{
+                            'wildcard-selected': isWildcardSelected(wildcardKey),
+                            'wildcard-renaming': isWildcardRenaming(wildcardKey),
+                        }"
+                        :key="wildcardKey"
+                        @click="selectWildcard(wildcardKey)"
+                        @dblclick="startRenamingWildcard(wildcardKey)"
+                    >
+                        <!-- リネーム -->
+                        <ElInput
+                            v-if="isWildcardRenaming(wildcardKey)"
+                            v-model="renamedWildcard"
+                            @focus="onRenameInputFocus"
+                            @keydown.prevent.enter="saveRenamingWildcard"
+                            @keydown.prevent.esc="cancelRenamingWildcard"
+                            ref="renameWildcardInputRef"
+                        />
+                        <!-- wildcard名 -->
+                        <span v-else>
+                            {{ wildcardKey }}
                         </span>
-                    </template>
 
-                    <template v-else-if="isWildcardRenaming(wildcardKey)">
-                        <span class="edit-buttons">
-                            <ElButtonGroup>
-                                <ElButton
-                                    :icon="Check"
-                                    type="success"
-                                    circle
-                                    @click.stop="saveRenamingWildcard"
-                                />
-                                <ElButton
-                                    :icon="Close"
-                                    type="info"
-                                    circle
-                                    @click.stop="cancelRenamingWildcard"
-                                />
-                            </ElButtonGroup>
-                        </span>
-                    </template>
-                </p>
-            </ElScrollbar>
+                        <!-- 編集ボタン -->
+                        <template v-if="isWildcardSelected(wildcardKey) && !renamingWildcard">
+                            <span class="edit-buttons">
+                                <ElButtonGroup type="info">
+                                    <ElButton
+                                        circle
+                                        :icon="copying ? Checked : List"
+                                        @click="copyToClipboard(`__${wildcardKey}__`)"
+                                    />
+
+                                    <ElButton
+                                        circle
+                                        :icon="EditPen"
+                                        @click="startRenamingWildcard(wildcardKey)"
+                                    />
+
+                                    <ElPopconfirm
+                                        title="Are you sure to delete?"
+                                        :width="200"
+                                        @confirm="deleteWildcard(wildcardKey)"
+                                    >
+                                        <template #reference>
+                                            <ElButton circle :icon="DeleteFilled" type="danger" />
+                                        </template>
+                                    </ElPopconfirm>
+                                </ElButtonGroup>
+                            </span>
+                        </template>
+
+                        <template v-else-if="isWildcardRenaming(wildcardKey)">
+                            <span class="edit-buttons">
+                                <ElButtonGroup>
+                                    <ElButton
+                                        :icon="Check"
+                                        type="success"
+                                        circle
+                                        @click.stop="saveRenamingWildcard"
+                                    />
+                                    <ElButton
+                                        :icon="Close"
+                                        type="info"
+                                        circle
+                                        @click.stop="cancelRenamingWildcard"
+                                    />
+                                </ElButtonGroup>
+                            </span>
+                        </template>
+                    </p>
+                </ElScrollbar>
+            </div>
         </ElCol>
 
         <!-- 編集エリア -->
         <ElCol :span="15">
-            <PromptTextarea
-                v-show="selectedWildcard"
-                ref="wildcardTextareaRef"
-                :prompt-text-prop="selectedWildcardString"
-                @change="editWildcardString"
-                @keydown.ctrl.space.prevent="emit('intellisense')"
-            />
+            <template v-if="selectedWildcard">
+                <PromptTextarea
+                    v-show="selectedWildcard"
+                    ref="wildcardTextareaRef"
+                    :prompt-text-prop="selectedWildcardString"
+                    @change="editWildcardString"
+                    @keydown.ctrl.space.prevent="emit('intellisense')"
+                />
+            </template>
+
+            <div v-else class="empty-container">
+                <ElEmpty description=" ">
+                    <h3>Select Wildcard</h3>
+                </ElEmpty>
+            </div>
         </ElCol>
     </ElRow>
 </template>
 
 <style scoped>
+.wildcards-container {
+    height: 65vh;
+    margin-right: 5px;
+    border-radius: 5px;
+    border: var(--el-border);
+}
+
 .edit-buttons {
     position: absolute;
     right: 15px;
@@ -401,15 +427,15 @@ p.wildcard-selected:hover {
 .dark-button-success {
     --el-button-bg-color: var(--el-color-success-light-3);
     --el-button-border-color: var(--el-color-success-light-5);
+    --el-button-hover-bg-color: var(--el-color-success-light-7);
+    --el-button-hover-border-color: var(--el-color-success-light-8);
 }
 
-.dark-button-success {
-    --el-button-bg-color: var(--el-color-success-light-3);
-    --el-button-border-color: var(--el-color-success-light-5);
-}
-
-.dark-button-warning {
-    --el-button-bg-color: var(--el-color-warning-light-3);
-    --el-button-border-color: var(--el-color-warning-light-5);
+.empty-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 60vh;
 }
 </style>

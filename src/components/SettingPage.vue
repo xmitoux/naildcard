@@ -35,6 +35,7 @@ import { insertDanbooruTagToTextarea } from '@/utils/utils';
 import { getStorage, saveStorage } from '@/utils/chrome-api';
 import { defaultSettings } from '@/background';
 import { useFileImportExport } from '@/composables/useFileImportExport';
+import PngInfo from '@/components/PngInfo.vue';
 
 const isDark = useDark();
 const toggleDark = useToggle(isDark);
@@ -270,11 +271,11 @@ const exportPrompt = () => exportSetting(currentSettings.value.prompt, 'dynamic-
                                     :disabled="!danbooruTag"
                                     :icon="Edit"
                                     type="primary"
-                                    style="width: 200px"
+                                    style="width: 100px"
                                     v-show="activeTabName === 'Prompt'"
                                     @click="insertDanbooruTagToPrompt()"
                                 >
-                                    Insert Tag to Prompt
+                                    Insert
                                 </ElButton>
                             </template>
                             <template v-else>
@@ -285,21 +286,22 @@ const exportPrompt = () => exportSetting(currentSettings.value.prompt, 'dynamic-
                                     "
                                     :icon="Postcard"
                                     type="success"
-                                    style="width: 200px"
+                                    style="width: 100px"
                                     v-show="activeTabName === 'Wildcard'"
                                     @click="insertDanbooruTagToWildcard()"
                                 >
-                                    Insert Tag to Wildcard
+                                    Insert
                                 </ElButton>
                             </template>
                             <ElButton
                                 :class="{ 'dark-button-warning': isDark }"
+                                style="width: 100px"
                                 :disabled="!danbooruTag"
                                 type="warning"
                                 :icon="Memo"
                                 @click="referToWiki"
                             >
-                                Refer to Wiki
+                                Wiki
                             </ElButton>
                         </ElSpace>
                     </ElFormItem>
@@ -311,7 +313,7 @@ const exportPrompt = () => exportSetting(currentSettings.value.prompt, 'dynamic-
     <div style="height: 70vh">
         <ElTabs v-model="activeTabName" type="card">
             <ElTabPane label="📝Dynamic Prompt" name="Prompt">
-                <ElRow style="margin: 5px 0">
+                <ElRow style="margin: 10px 0">
                     <ElButton
                         :class="{ 'dark-button-primary': isDark }"
                         :icon="MagicStick"
@@ -319,7 +321,7 @@ const exportPrompt = () => exportSetting(currentSettings.value.prompt, 'dynamic-
                         type="primary"
                         @click="formatPrompt"
                     >
-                        Format Prompt
+                        Format
                     </ElButton>
 
                     <ElButton
@@ -329,7 +331,7 @@ const exportPrompt = () => exportSetting(currentSettings.value.prompt, 'dynamic-
                         type="primary"
                         @click="exportPrompt()"
                     >
-                        Export Prompt
+                        Export
                     </ElButton>
                     <ElUpload
                         v-model:file-list="fileList"
@@ -344,7 +346,7 @@ const exportPrompt = () => exportSetting(currentSettings.value.prompt, 'dynamic-
                             size="small"
                             type="primary"
                         >
-                            Import Prompt
+                            Import
                         </ElButton>
                     </ElUpload>
                 </ElRow>
@@ -365,6 +367,9 @@ const exportPrompt = () => exportSetting(currentSettings.value.prompt, 'dynamic-
                     @intellisense="onIntelliSense"
                 />
             </ElTabPane>
+            <ElTabPane label="ℹ️NAI PNG Info" name="NAI PNG Info">
+                <PngInfo />
+            </ElTabPane>
         </ElTabs>
     </div>
 </template>
@@ -373,19 +378,26 @@ const exportPrompt = () => exportSetting(currentSettings.value.prompt, 'dynamic-
 .dark-button-primary {
     --el-button-bg-color: var(--el-color-primary-light-3);
     --el-button-border-color: var(--el-color-primary-light-5);
+    --el-button-hover-bg-color: var(--el-color-primary-light-7);
+    --el-button-hover-border-color: var(--el-color-primary-light-8);
 }
 
 .dark-button-success {
     --el-button-bg-color: var(--el-color-success-light-3);
     --el-button-border-color: var(--el-color-success-light-5);
+    --el-button-hover-bg-color: var(--el-color-success-light-7);
+    --el-button-hover-border-color: var(--el-color-success-light-8);
 }
 
 .dark-button-warning {
     --el-button-bg-color: var(--el-color-warning-light-3);
     --el-button-border-color: var(--el-color-warning-light-5);
+    --el-button-hover-bg-color: var(--el-color-warning-light-7);
+    --el-button-hover-border-color: var(--el-color-warning-light-8);
 }
 
 :deep(.el-tabs__header) {
     margin: 0;
+    user-select: none;
 }
 </style>
