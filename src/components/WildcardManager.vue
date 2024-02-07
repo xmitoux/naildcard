@@ -306,33 +306,32 @@ const importWildcards: UploadRequestHandler = async (options: UploadRequestOptio
             </div>
         </ElCol>
 
-        <template v-if="selectedWildcard">
+        <ElButton
+            v-show="sortedWildcard.length"
+            :class="{ 'dark-button-success': isDark }"
+            :icon="Upload"
+            size="small"
+            type="success"
+            @click="exportWildcards"
+        >
+            Export
+        </ElButton>
+        <ElUpload
+            v-model:file-list="fileList"
+            accept=".json"
+            :auto-upload="true"
+            :show-file-list="false"
+            :http-request="importWildcards"
+        >
             <ElButton
                 :class="{ 'dark-button-success': isDark }"
-                :icon="Upload"
+                :icon="Download"
                 size="small"
                 type="success"
-                @click="exportWildcards"
             >
-                Export
+                Import
             </ElButton>
-            <ElUpload
-                v-model:file-list="fileList"
-                accept=".json"
-                :auto-upload="true"
-                :show-file-list="false"
-                :http-request="importWildcards"
-            >
-                <ElButton
-                    :class="{ 'dark-button-success': isDark }"
-                    :icon="Download"
-                    size="small"
-                    type="success"
-                >
-                    Import
-                </ElButton>
-            </ElUpload>
-        </template>
+        </ElUpload>
     </ElRow>
 
     <ElRow>
