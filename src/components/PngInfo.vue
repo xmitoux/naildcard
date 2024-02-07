@@ -91,6 +91,7 @@ const activeTabName = ref('Positive');
 <template>
     <ElRow style="margin-top: 10px" :gutter="65">
         <ElCol :span="9">
+            <!-- 画像アップロードエリア -->
             <ElUpload
                 v-show="!fileList.length"
                 v-model:file-list="fileList"
@@ -99,35 +100,29 @@ const activeTabName = ref('Positive');
                 :http-request="handleUploadImage"
                 :show-file-list="false"
             >
-                <div
-                    style="
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: center;
-                        height: 65vh;
-                    "
-                >
+                <div class="el-upload-container">
                     <ElIcon class="el-icon--upload"><PictureFilled /></ElIcon>
                     <div class="el-upload__text">Drop png image file here or click to upload</div>
                 </div>
             </ElUpload>
 
+            <!-- 画像表示エリア -->
             <div
                 v-show="fileList.length"
-                style="position: relative; cursor: pointer"
+                class="image-container"
                 @click="openImagePicker"
                 @dragover="handleDragOver"
                 @drop="handleDropImage"
             >
                 <ElImage alt="Preview Image" fit="contain" :src="imageUrl" w-full />
                 <ElButton
-                    style="position: absolute; top: 5px; right: 5px"
+                    class="image-close-button"
                     circle
                     :icon="Close"
                     type="info"
                     @click.stop="fileList = []"
                 />
+                <!-- 画像表示時のアップロードinput -->
                 <input
                     style="display: none"
                     ref="fileInput"
@@ -138,6 +133,7 @@ const activeTabName = ref('Positive');
             </div>
         </ElCol>
 
+        <!-- PNG Info エリア -->
         <ElCol v-show="fileList.length" :span="15">
             <ElTabs v-model="activeTabName" tab-position="left">
                 <ElTabPane label="Positive" name="Positive">
@@ -168,6 +164,24 @@ const activeTabName = ref('Positive');
     user-select: none;
 }
 
+.el-upload-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 65vh;
+}
+
+.image-container {
+    position: relative;
+    cursor: pointer;
+}
+
+.image-close-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}
 .text-container {
     height: 67vh;
     padding: 7px 10px;
