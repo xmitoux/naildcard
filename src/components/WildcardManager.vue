@@ -73,11 +73,6 @@ watchEffect(() => {
 
 const selectWildcard = (wildcardKey: string) => {
     selectedWildcard.value = wildcardKey;
-
-    if (selectedWildcard.value !== renamingWildcard.value) {
-        // リネーム中に他の行を選択した場合は終了
-        cancelRenamingWildcard();
-    }
 };
 
 const selectedWildcardString = computed<string>(() => {
@@ -266,6 +261,13 @@ const importWildcards: UploadRequestHandler = async (options: UploadRequestOptio
     const importedSettings = await importSettings(options.file, loadWildcard);
     wildcardsWork.value = importedSettings.wildcards;
 };
+
+const onRenameInputBlur = () => {
+    // リネーム確定ボタンクリックをキャンセルしないように非同期で実行
+    setTimeout(() => {
+        cancelRenamingWildcard();
+    }, 80);
+};
 </script>
 
 <template>
@@ -357,6 +359,7 @@ const importWildcards: UploadRequestHandler = async (options: UploadRequestOptio
                             @keydown.prevent.enter="saveRenamingWildcard"
                             @keydown.prevent.esc="cancelRenamingWildcard"
                             ref="renameWildcardInputRef"
+                            @blur="onRenameInputBlur"
                         />
                         <!-- wildcard名 -->
                         <span v-else>
