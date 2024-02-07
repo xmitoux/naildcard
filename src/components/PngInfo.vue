@@ -101,24 +101,24 @@ const copyPrompt = () => {
 </script>
 
 <template>
-    <ElRow style="margin: 10px 0" :gutter="75">
-        <ElCol :span="11" />
-        <ElCol style="height: 24px" :span="13">
-            <ElButton
-                v-show="fileList.length && activeTabName !== 'Other Info'"
-                :class="{ 'dark-button-warning': isDark, 'copy-button': true }"
-                :icon="copying ? Checked : List"
-                size="small"
-                type="warning"
-                @click="copyPrompt"
-            >
-                Copy {{ activeTabName }} Prompt
-            </ElButton>
+    <ElRow style="margin: 10px 0">
+        <ElCol style="height: 24px" :span="7">
+            <!-- スペース -->
         </ElCol>
+        <ElButton
+            v-show="fileList.length && activeTabName !== 'Other Info'"
+            :class="{ 'dark-button-warning': isDark, 'copy-button': true }"
+            :icon="copying ? Checked : List"
+            size="small"
+            type="warning"
+            @click="copyPrompt"
+        >
+            Copy {{ activeTabName }} Prompt
+        </ElButton>
     </ElRow>
 
-    <ElRow :gutter="65">
-        <ElCol :span="9">
+    <ElRow>
+        <ElCol :span="7">
             <!-- 画像アップロードエリア -->
             <ElUpload
                 v-show="!fileList.length"
@@ -142,12 +142,13 @@ const copyPrompt = () => {
                 @dragover="handleDragOver"
                 @drop="handleDropImage"
             >
-                <ElImage alt="Preview Image" fit="contain" :src="imageUrl" w-full />
+                <ElImage alt="Preview Image" fit="contain" :src="imageUrl" />
                 <ElButton
                     class="image-close-button"
                     circle
                     :icon="Close"
                     type="info"
+                    size="small"
                     @click.stop="fileList = []"
                 />
                 <!-- 画像表示時のアップロードinput -->
@@ -162,7 +163,7 @@ const copyPrompt = () => {
         </ElCol>
 
         <!-- PNG Info エリア -->
-        <ElCol v-show="fileList.length" :span="15">
+        <ElCol v-show="fileList.length" :span="17">
             <ElTabs v-model="activeTabName" tab-position="left">
                 <ElTabPane label="Positive" name="Positive">
                     <div class="text-container">
@@ -184,7 +185,8 @@ const copyPrompt = () => {
 
 <style scoped>
 :deep(.el-upload-dragger) {
-    height: 69vh;
+    width: 45vh;
+    height: 65vh;
     padding: 0;
 }
 
@@ -197,22 +199,30 @@ const copyPrompt = () => {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 65vh;
+    height: 60vh;
 }
 
 .image-container {
+    width: 45vh;
+    height: 65vh;
+    padding: 5px;
+    display: flex;
+    justify-content: center;
+    text-align: center;
     position: relative;
     cursor: pointer;
+    border-radius: 5px;
+    border: var(--el-border);
 }
 
 .image-close-button {
     position: absolute;
-    top: 5px;
-    right: 5px;
+    top: 10px;
+    right: 10px;
 }
 .text-container {
-    height: 67vh;
-    padding: 7px 10px;
+    height: 65vh;
+    padding: 5px 10px;
     border-radius: 5px;
     border: var(--el-border);
     font-size: 14px;
@@ -225,6 +235,7 @@ const copyPrompt = () => {
 .copy-button {
     width: 160px;
     height: 24px;
+    margin-left: 115px;
 }
 
 .dark-button-warning {

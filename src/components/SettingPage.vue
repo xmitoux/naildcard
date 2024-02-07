@@ -366,7 +366,9 @@ const exportPrompt = () => exportSetting(currentSettings.value.prompt, 'dynamic-
                     @intellisense="onIntelliSense"
                 />
             </ElTabPane>
-            <ElTabPane label="ℹ️PNG Info" name="PNG Info"><PngInfo /></ElTabPane>
+            <ElTabPane label="ℹ️PNG Info" name="PNG Info">
+                <PngInfo />
+            </ElTabPane>
         </ElTabs>
     </div>
 </template>
@@ -375,16 +377,22 @@ const exportPrompt = () => exportSetting(currentSettings.value.prompt, 'dynamic-
 .dark-button-primary {
     --el-button-bg-color: var(--el-color-primary-light-3);
     --el-button-border-color: var(--el-color-primary-light-5);
+    --el-button-hover-bg-color: var(--el-color-primary-light-7);
+    --el-button-hover-border-color: var(--el-color-primary-light-8);
 }
 
 .dark-button-success {
     --el-button-bg-color: var(--el-color-success-light-3);
     --el-button-border-color: var(--el-color-success-light-5);
+    --el-button-hover-bg-color: var(--el-color-success-light-7);
+    --el-button-hover-border-color: var(--el-color-success-light-8);
 }
 
 .dark-button-warning {
     --el-button-bg-color: var(--el-color-warning-light-3);
     --el-button-border-color: var(--el-color-warning-light-5);
+    --el-button-hover-bg-color: var(--el-color-warning-light-7);
+    --el-button-hover-border-color: var(--el-color-warning-light-8);
 }
 
 :deep(.el-tabs__header) {

@@ -252,31 +252,33 @@ const importWildcards: UploadRequestHandler = async (options: UploadRequestOptio
             <!-- スペース -->
         </ElCol>
 
-        <ElButton
-            :class="{ 'dark-button-success': isDark }"
-            :icon="Upload"
-            size="small"
-            type="success"
-            @click="exportWildcards"
-        >
-            Export Wildcards
-        </ElButton>
-        <ElUpload
-            v-model:file-list="fileList"
-            accept=".json"
-            :auto-upload="true"
-            :show-file-list="false"
-            :http-request="importWildcards"
-        >
+        <template v-if="selectedWildcard">
             <ElButton
                 :class="{ 'dark-button-success': isDark }"
-                :icon="Download"
+                :icon="Upload"
                 size="small"
                 type="success"
+                @click="exportWildcards"
             >
-                Import Wildcards
+                Export Wildcards
             </ElButton>
-        </ElUpload>
+            <ElUpload
+                v-model:file-list="fileList"
+                accept=".json"
+                :auto-upload="true"
+                :show-file-list="false"
+                :http-request="importWildcards"
+            >
+                <ElButton
+                    :class="{ 'dark-button-success': isDark }"
+                    :icon="Download"
+                    size="small"
+                    type="success"
+                >
+                    Import Wildcards
+                </ElButton>
+            </ElUpload>
+        </template>
     </ElRow>
 
     <ElRow>
@@ -404,15 +406,7 @@ p.wildcard-selected:hover {
 .dark-button-success {
     --el-button-bg-color: var(--el-color-success-light-3);
     --el-button-border-color: var(--el-color-success-light-5);
-}
-
-.dark-button-success {
-    --el-button-bg-color: var(--el-color-success-light-3);
-    --el-button-border-color: var(--el-color-success-light-5);
-}
-
-.dark-button-warning {
-    --el-button-bg-color: var(--el-color-warning-light-3);
-    --el-button-border-color: var(--el-color-warning-light-5);
+    --el-button-hover-bg-color: var(--el-color-success-light-7);
+    --el-button-hover-border-color: var(--el-color-success-light-8);
 }
 </style>

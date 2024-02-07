@@ -10,6 +10,11 @@ body {
 h1,
 h2,
 label,
-span {
+span,
+img {
     user-select: none;
+}
+
+* {
+    box-sizing: border-box;
 }
