@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { getMetadata } from 'meta-png';
 import {
     ElButton,
     ElCol,
+    ElEmpty,
     ElIcon,
     ElImage,
     ElRow,
@@ -23,16 +24,20 @@ const isDark = useDark();
 type PngMetaData = {
     prompt: string;
     uc: string;
-    height: number;
     width: number;
-    seed: number;
-
-    request_type: string;
+    height: number;
     steps: number;
-    sampler: string;
     scale: number;
+    seed: number;
+    sampler: string;
+    sm: boolean;
+    sm_dyn: boolean;
+    request_type: string;
     strength?: number;
     noise?: number;
+    uncond_scale: number;
+    cfg_rescale: number;
+    noise_schedule: string;
 };
 
 const fileList = ref<UploadUserFile[]>([]);
@@ -46,8 +51,11 @@ const loadImage = (file: File) => {
         try {
             const uint8Array = new Uint8Array(buffer);
             const metadata = getMetadata(uint8Array, 'Comment') as string;
-            pngMetaData.value = JSON.parse(metadata);
-            // console.log(pngMetaData.value);
+            if (metadata) {
+                pngMetaData.value = JSON.parse(metadata);
+            } else {
+                pngMetaData.value = undefined;
+            }
             imageUrl.value = URL.createObjectURL(file);
         } catch (error) {
             console.error('Error reading metadata: ', error);
@@ -98,6 +106,62 @@ const copyPrompt = () => {
         activeTabName.value === 'Positive' ? pngMetaData.value!.prompt! : pngMetaData.value!.uc!,
     );
 };
+
+const pngOtherInfo = computed<string>(() => {
+    const metaData = pngMetaData.value;
+    if (!metaData) {
+        return '';
+    }
+    type RequestType = 'text2image' | 'image2image' | 'inpaint';
+    const requestTypeMap: Record<string, RequestType> = {
+        PromptGenerateRequest: 'text2image',
+        Img2ImgRequest: 'image2image',
+        NativeInfillingRequest: 'inpaint',
+    };
+
+    const requestType = requestTypeMap[metaData.request_type];
+
+    const i2iParams =
+        requestType === 'image2image'
+            ? `
+Strength: ${metaData.strength}
+
+Noise: ${metaData.noise}
+`
+            : '';
+
+    const smea =
+        requestType === 'text2image'
+            ? `
+SMEA: ${metaData.sm ? 'ON' : 'OFF'}
+
+DYN: ${metaData.sm_dyn ? 'ON' : 'OFF'}
+`
+            : '';
+
+    const otherInfoString = `Width: ${metaData.width}
+    
+Height: ${metaData.height}
+
+Steps: ${metaData.steps}
+
+Guidance Scale: ${metaData.scale}
+
+Seed: ${metaData.seed}
+
+Sampler: ${metaData.sampler}
+
+Generation Type: ${requestType}
+${i2iParams}${smea}
+Undesired Content Strength: ${metaData.uncond_scale}
+
+Prompt Guidance Rescale : ${metaData.cfg_rescale}
+
+Noise Schedule: ${metaData.noise_schedule}
+`;
+
+    return otherInfoString;
+});
 </script>
 
 <template>
@@ -106,7 +170,7 @@ const copyPrompt = () => {
             <!-- スペース -->
         </ElCol>
         <ElButton
-            v-show="fileList.length && activeTabName !== 'Other Info'"
+            v-show="fileList.length && pngMetaData && activeTabName !== 'Other Info'"
             :class="{ 'dark-button-warning': isDark, 'copy-button': true }"
             :icon="copying ? Checked : List"
             size="small"
@@ -130,7 +194,7 @@ const copyPrompt = () => {
             >
                 <div class="el-upload-container">
                     <ElIcon class="el-icon--upload"><PictureFilled /></ElIcon>
-                    <div class="el-upload__text">Drop png image file here or click to upload</div>
+                    <h3>Drop NAI image file here or click to upload</h3>
                 </div>
             </ElUpload>
 
@@ -164,7 +228,7 @@ const copyPrompt = () => {
 
         <!-- PNG Info エリア -->
         <ElCol v-show="fileList.length" :span="17">
-            <ElTabs v-model="activeTabName" tab-position="left">
+            <ElTabs v-if="pngMetaData" v-model="activeTabName" tab-position="left">
                 <ElTabPane label="Positive" name="Positive">
                     <div class="text-container">
                         {{ pngMetaData?.prompt }}
@@ -176,9 +240,14 @@ const copyPrompt = () => {
                     </div>
                 </ElTabPane>
                 <ElTabPane label="Other Info" name="Other Info">
-                    <div class="text-container"></div>
+                    <div class="text-container">{{ pngOtherInfo }}</div>
                 </ElTabPane>
             </ElTabs>
+            <div v-else class="empty-container">
+                <ElEmpty description=" ">
+                    <h3>No Info</h3>
+                </ElEmpty>
+            </div>
         </ElCol>
     </ElRow>
 </template>
@@ -188,10 +257,6 @@ const copyPrompt = () => {
     width: 45vh;
     height: 65vh;
     padding: 0;
-}
-
-:deep(.el-upload__text) {
-    user-select: none;
 }
 
 .el-upload-container {
@@ -243,5 +308,12 @@ const copyPrompt = () => {
     --el-button-border-color: var(--el-color-warning-light-5);
     --el-button-hover-bg-color: var(--el-color-warning-light-7);
     --el-button-hover-border-color: var(--el-color-warning-light-8);
+}
+
+.empty-container {
+    height: 60vh;
+    display: flex;
+    justify-content: center;
+    text-align: center;
 }
 </style>

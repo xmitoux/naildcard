@@ -366,7 +366,7 @@ const exportPrompt = () => exportSetting(currentSettings.value.prompt, 'dynamic-
                     @intellisense="onIntelliSense"
                 />
             </ElTabPane>
-            <ElTabPane label="ℹ️PNG Info" name="PNG Info">
+            <ElTabPane label="ℹ️NAI PNG Info" name="NAI PNG Info">
                 <PngInfo />
             </ElTabPane>
         </ElTabs>
