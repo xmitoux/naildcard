@@ -455,11 +455,13 @@ const onRenameInputBlur = () => {
 
 p {
     position: relative;
-    margin: 0px; /* リストアイテム間の間隔 */
-    margin-right: 10px; /* スクロールバー分を空ける */
-    padding: 10px; /* 内側の余白 */
-    border-radius: 5px; /* 角の丸み */
-    transition: background-color 0.2s; /* スムーズな背景色の変更 */
+    margin: 0px;
+    margin-right: 10px;
+    padding-top: 9px;
+    padding-bottom: 9px;
+    padding-left: 11px;
+    border-radius: 5px;
+    transition: background-color 0.2s;
     font-size: 14px;
 }
 
@@ -472,8 +474,12 @@ p.wildcard-selected:hover {
     background-color: var(--el-color-primary-light-5);
 }
 
-.wildcard-renaming {
-    padding: 2px;
+.wildcard-renaming,
+p.wildcard-renaming:hover {
+    padding: 0;
+    padding-top: 3px;
+    padding-bottom: 2px;
+    background-color: var(--el-color-info-light-7);
 }
 
 .dark-button-success {
@@ -489,5 +495,9 @@ p.wildcard-selected:hover {
     align-items: center;
     justify-content: center;
     height: 60vh;
+}
+
+:deep(.el-input__inner) {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 </style>
