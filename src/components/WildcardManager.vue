@@ -8,6 +8,7 @@ import {
     Download,
     EditPen,
     List,
+    Filter,
     Upload,
 } from '@element-plus/icons-vue';
 import {
@@ -56,7 +57,7 @@ const insertDanbooruTag = (
     );
 };
 
-const selectedWildcard = ref<string | null>(null);
+const selectedWildcard = ref<string>();
 
 defineExpose({
     insertDanbooruTag,
@@ -72,11 +73,6 @@ watchEffect(() => {
 
 const selectWildcard = (wildcardKey: string) => {
     selectedWildcard.value = wildcardKey;
-
-    if (selectedWildcard.value !== renamingWildcard.value) {
-        // リネーム中に他の行を選択した場合は終了
-        cancelRenamingWildcard();
-    }
 };
 
 const selectedWildcardString = computed<string>(() => {
@@ -94,8 +90,14 @@ const newWildcardKey = ref<string>('');
 const newWildcardKeyTrim = computed(() => newWildcardKey.value.trim());
 const addNewWildcard = () => {
     if (addWildcard(newWildcardKeyTrim.value)) {
-        newWildcardKey.value = '';
         saveWildcard();
+
+        if (!sortedWildcard.value.includes(newWildcardKeyTrim.value)) {
+            // 追加したワイルドカードがフィルタ結果に含まれない場合はフィルタを解除
+            filterQuery.value = '';
+        }
+
+        newWildcardKey.value = '';
         nextTick(() => wildcardTextareaRef.value?.textareaRef.textarea.focus());
     }
 };
@@ -131,12 +133,20 @@ const validateWildcardName = (name: string): boolean => {
 };
 
 const deleteWildcard = (wildcardKey: string) => {
+    const updateSelectedIndex = (): number => {
+        const selectedIndex = sortedWildcard.value.indexOf(wildcardKey);
+        const newIndex = selectedIndex === 0 ? 0 : selectedIndex - 1;
+        return newIndex;
+    };
+    const newIndex = updateSelectedIndex();
+
     delete wildcardsWork.value[wildcardKey];
+
     saveWildcard();
 
     // ワイルドカード削除不具合対応
     // (textareaが空になることでchangeが発火し、selectedWildcardに空文字が残っていた)
-    selectedWildcard.value = null;
+    selectedWildcard.value = sortedWildcard.value[newIndex];
 };
 
 const editWildcardString = (changedWildcardString: string) => {
@@ -189,6 +199,11 @@ const saveRenamingWildcard = (event: Event) => {
 
         selectWildcard(renamedWildcardName);
 
+        if (!sortedWildcard.value.includes(renamedWildcardName)) {
+            // リネームしたワイルドカードがフィルタ結果に含まれない場合はフィルタを解除
+            filterQuery.value = '';
+        }
+
         // リネーム不具合対応
         // (確定ボタンをクリックするとpタグのclickイベントが発生し、リネーム前のゾンビが残る
         // 確定ボタンの@click.stopがなぜか効かないのでstopPropagation)
@@ -202,7 +217,32 @@ const cancelRenamingWildcard = () => {
     renameWildcardInputRef.value = null;
 };
 
-const sortedWildcard = computed<string[]>(() => Object.keys(wildcardsWork.value).sort());
+const filterQuery = ref('');
+const sortedWildcard = computed<string[]>(() => {
+    const wildcards = Object.keys(wildcardsWork.value);
+
+    const filteredWildcards = wildcards.filter((wildcard: string): boolean => {
+        const wildcardLowerCase = wildcard.toLowerCase();
+        const query = filterQuery.value;
+
+        let queryIndex = 0;
+        for (let i = 0; i < wildcardLowerCase.length && queryIndex < query.length; i++) {
+            if (wildcardLowerCase[i] === query[queryIndex]) {
+                queryIndex++;
+            }
+        }
+        return queryIndex === query.length;
+    });
+
+    return filteredWildcards.sort();
+});
+
+const onInputFilter = () => {
+    if (selectedWildcard.value && !sortedWildcard.value.includes(selectedWildcard.value)) {
+        // 選択中のワイルドカードがフィルタ結果に含まれない場合は選択を解除
+        selectedWildcard.value = undefined;
+    }
+};
 
 const onRenameInputFocus = () => {
     const input = renameWildcardInputRef.value![0].input!;
@@ -217,7 +257,7 @@ const { importSettings, exportSetting, fileList } = useFileImportExport();
 const exportWildcards = () =>
     exportSetting(JSON.stringify(wildcardsWork.value), 'wildcards', 'json');
 const importWildcards: UploadRequestHandler = async (options: UploadRequestOptions) => {
-    selectedWildcard.value = null;
+    selectedWildcard.value = undefined;
     cancelRenamingWildcard();
 
     const loadWildcard = (wildcardJson: string, settings: Settings) => {
@@ -229,12 +269,19 @@ const importWildcards: UploadRequestHandler = async (options: UploadRequestOptio
     const importedSettings = await importSettings(options.file, loadWildcard);
     wildcardsWork.value = importedSettings.wildcards;
 };
+
+const onRenameInputBlur = () => {
+    // リネーム確定ボタンクリックをキャンセルしないように非同期で実行
+    setTimeout(() => {
+        cancelRenamingWildcard();
+    }, 80);
+};
 </script>
 
 <template>
     <!-- 追加エリア -->
     <ElRow style="margin: 10px 0">
-        <ElCol :span="9">
+        <ElCol :span="5">
             <div style="margin-right: 5px">
                 <ElInput
                     v-model="newWildcardKey"
@@ -256,33 +303,45 @@ const importWildcards: UploadRequestHandler = async (options: UploadRequestOptio
             </div>
         </ElCol>
 
-        <template v-if="selectedWildcard">
+        <ElCol :span="4">
+            <div style="margin-right: 5px">
+                <ElInput
+                    v-model="filterQuery"
+                    clearable
+                    placeholder="Filter Wildcard"
+                    :prefix-icon="Filter"
+                    size="small"
+                    @input="onInputFilter"
+                />
+            </div>
+        </ElCol>
+
+        <ElButton
+            v-show="sortedWildcard.length"
+            :class="{ 'dark-button-success': isDark }"
+            :icon="Upload"
+            size="small"
+            type="success"
+            @click="exportWildcards"
+        >
+            Export
+        </ElButton>
+        <ElUpload
+            v-model:file-list="fileList"
+            accept=".json"
+            :auto-upload="true"
+            :show-file-list="false"
+            :http-request="importWildcards"
+        >
             <ElButton
                 :class="{ 'dark-button-success': isDark }"
-                :icon="Upload"
+                :icon="Download"
                 size="small"
                 type="success"
-                @click="exportWildcards"
             >
-                Export
+                Import
             </ElButton>
-            <ElUpload
-                v-model:file-list="fileList"
-                accept=".json"
-                :auto-upload="true"
-                :show-file-list="false"
-                :http-request="importWildcards"
-            >
-                <ElButton
-                    :class="{ 'dark-button-success': isDark }"
-                    :icon="Download"
-                    size="small"
-                    type="success"
-                >
-                    Import
-                </ElButton>
-            </ElUpload>
-        </template>
+        </ElUpload>
     </ElRow>
 
     <ElRow>
@@ -308,6 +367,7 @@ const importWildcards: UploadRequestHandler = async (options: UploadRequestOptio
                             @keydown.prevent.enter="saveRenamingWildcard"
                             @keydown.prevent.esc="cancelRenamingWildcard"
                             ref="renameWildcardInputRef"
+                            @blur="onRenameInputBlur"
                         />
                         <!-- wildcard名 -->
                         <span v-else>
@@ -398,30 +458,36 @@ const importWildcards: UploadRequestHandler = async (options: UploadRequestOptio
 .edit-buttons {
     position: absolute;
     right: 15px;
-    top: 2px;
+    top: 3px;
 }
 
 p {
     position: relative;
-    margin: 0px; /* リストアイテム間の間隔 */
-    margin-right: 10px; /* スクロールバー分を空ける */
-    padding: 10px; /* 内側の余白 */
-    border-radius: 5px; /* 角の丸み */
-    transition: background-color 0.2s; /* スムーズな背景色の変更 */
+    margin: 0px;
+    margin-right: 10px;
+    padding-top: 9px;
+    padding-bottom: 9px;
+    padding-left: 11px;
+    border-radius: 5px;
+    transition: background-color 0.2s;
     font-size: 14px;
 }
 
 p:hover {
-    background-color: var(--el-color-info);
+    background-color: var(--el-color-info-light-7);
 }
 
 .wildcard-selected,
 p.wildcard-selected:hover {
-    background-color: var(--el-color-primary-light-3);
+    background-color: var(--el-color-primary-light-5);
 }
 
-.wildcard-renaming {
-    padding: 2px;
+.wildcard-renaming,
+p.wildcard-renaming:hover {
+    padding: 0;
+    padding-top: 3px;
+    padding-bottom: 2px;
+    background-color: var(--el-color-info-light-7);
 }
 
 .dark-button-success {
@@ -437,5 +503,9 @@ p.wildcard-selected:hover {
     align-items: center;
     justify-content: center;
     height: 60vh;
+}
+
+:deep(.el-input__inner) {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 </style>
