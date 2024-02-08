@@ -57,7 +57,7 @@ const insertDanbooruTag = (
     );
 };
 
-const selectedWildcard = ref<string | null>(null);
+const selectedWildcard = ref<string>();
 
 defineExpose({
     insertDanbooruTag,
@@ -133,12 +133,20 @@ const validateWildcardName = (name: string): boolean => {
 };
 
 const deleteWildcard = (wildcardKey: string) => {
+    const updateSelectedIndex = (): number => {
+        const selectedIndex = sortedWildcard.value.indexOf(wildcardKey);
+        const newIndex = selectedIndex === 0 ? 0 : selectedIndex - 1;
+        return newIndex;
+    };
+    const newIndex = updateSelectedIndex();
+
     delete wildcardsWork.value[wildcardKey];
+
     saveWildcard();
 
     // ワイルドカード削除不具合対応
     // (textareaが空になることでchangeが発火し、selectedWildcardに空文字が残っていた)
-    selectedWildcard.value = null;
+    selectedWildcard.value = sortedWildcard.value[newIndex];
 };
 
 const editWildcardString = (changedWildcardString: string) => {
@@ -232,7 +240,7 @@ const sortedWildcard = computed<string[]>(() => {
 const onInputFilter = () => {
     if (selectedWildcard.value && !sortedWildcard.value.includes(selectedWildcard.value)) {
         // 選択中のワイルドカードがフィルタ結果に含まれない場合は選択を解除
-        selectedWildcard.value = null;
+        selectedWildcard.value = undefined;
     }
 };
 
@@ -249,7 +257,7 @@ const { importSettings, exportSetting, fileList } = useFileImportExport();
 const exportWildcards = () =>
     exportSetting(JSON.stringify(wildcardsWork.value), 'wildcards', 'json');
 const importWildcards: UploadRequestHandler = async (options: UploadRequestOptions) => {
-    selectedWildcard.value = null;
+    selectedWildcard.value = undefined;
     cancelRenamingWildcard();
 
     const loadWildcard = (wildcardJson: string, settings: Settings) => {
