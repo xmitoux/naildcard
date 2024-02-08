@@ -56,6 +56,12 @@ const loadImage = (file: File) => {
             } else {
                 pngMetaData.value = undefined;
             }
+
+            if (imageUrl.value) {
+                // 前のURLは削除(メモリ解放)
+                URL.revokeObjectURL(imageUrl.value);
+            }
+
             imageUrl.value = URL.createObjectURL(file);
         } catch (error) {
             console.error('Error reading metadata: ', error);
@@ -95,6 +101,11 @@ const handleDropImage = (event: DragEvent) => {
             loadImage(file);
         }
     }
+};
+
+const handleCloseImage = () => {
+    URL.revokeObjectURL(imageUrl.value);
+    fileList.value = [];
 };
 
 type InfoTabName = 'Positive' | 'Negative' | 'Other Info';
@@ -215,7 +226,7 @@ Noise Schedule: ${metaData.noise_schedule}
                         :icon="Close"
                         type="info"
                         size="small"
-                        @click.stop="fileList = []"
+                        @click.stop="handleCloseImage"
                     />
                     <!-- 画像表示時のアップロードinput -->
                     <input
