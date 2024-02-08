@@ -22,7 +22,10 @@ export default ({ mode }) => {
         build: {
             // 開発時はminifyしない
             minify: isProd,
+            chunkSizeWarningLimit: 1000,
         },
+
+        publicDir: false,
 
         server: {
             port: 5173,

@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, watchEffect, onMounted } from 'vue';
-import { ElAutocomplete, ElButton, ElCheckbox } from 'element-plus';
+import { ElAutocomplete, ElButton, ElCheckbox, ElMessage } from 'element-plus';
 import { List, Checked } from '@element-plus/icons-vue';
 import { useClipboardCopy } from '@/composables/useClipboardCopy';
-import { DANBOORU_CSV } from '@/constants/danbooru';
 import { TAG_HELPER_SUGGESTION_COUNT } from '@/constants/settings';
+import { DANBOORU_CSV_HEADER, DANBOORU_CSV_PATH } from '@/constants/danbooru';
 
 const props = defineProps<{
     savedTagHistories: string;
@@ -65,11 +65,30 @@ defineExpose({
 
 const danbooruTags = ref<DanbooruTag[]>([]);
 
-onMounted(() => {
-    danbooruTags.value = loadDanbooruTags();
+onMounted(async () => {
+    danbooruTags.value = await loadDanbooruTags();
 });
 
-const loadDanbooruTags = (): DanbooruTag[] => {
+const loadDanbooruTags = async (): Promise<DanbooruTag[]> => {
+    const readDanbooruCsv = async (path: string) => {
+        const csvSrc = chrome.runtime.getURL(path);
+
+        try {
+            const response = await fetch(csvSrc);
+            if (!response.ok) {
+                throw new Error(`Failed to load`);
+            }
+            return response.text();
+        } catch {
+            ElMessage.error({
+                duration: 0,
+                message:
+                    'Danbooru CSV not found! Please provide <danbooru.csv> to enable Danbooru Tag Helper.',
+                showClose: true,
+            });
+        }
+    };
+
     const csvToObjects = (csv: string): DanbooruTag[] => {
         const lines = csv.split('\n');
         const headers = lines[0].split(',') as (keyof DanbooruTag)[];
@@ -123,8 +142,11 @@ const loadDanbooruTags = (): DanbooruTag[] => {
         });
     };
 
+    const csv = await readDanbooruCsv(DANBOORU_CSV_PATH);
+    const csvAddedHeader = DANBOORU_CSV_HEADER + csv;
+
     // プロンプトで最終的に消す"_"を、検索で考慮しても意味がないので除去する
-    return csvToObjects(DANBOORU_CSV.replaceAll('_', ' '));
+    return csvToObjects(csvAddedHeader.replaceAll('_', ' '));
 };
 
 type FilteredDanbooruTag = DanbooruTag & { isActual: boolean };
