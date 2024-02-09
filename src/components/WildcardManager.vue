@@ -1,24 +1,46 @@
 <script setup lang="ts">
-import { Check, Checked, Close, DeleteFilled, EditPen, List } from '@element-plus/icons-vue';
+import { ref, computed, nextTick, watch, watchEffect } from 'vue';
+import {
+    Check,
+    Checked,
+    Close,
+    DeleteFilled,
+    Download,
+    EditPen,
+    List,
+    Filter,
+    Upload,
+} from '@element-plus/icons-vue';
 import {
     ElButton,
     ElButtonGroup,
     ElCol,
+    ElEmpty,
     ElInput,
     ElMessage,
     ElPopconfirm,
     ElRow,
     ElScrollbar,
+    ElUpload,
+    UploadRequestHandler,
+    UploadRequestOptions,
 } from 'element-plus';
 import PromptTextarea from '@/components/PromptTextarea.vue';
+import { useClipboardCopy } from '@/composables/useClipboardCopy';
+import { insertDanbooruTagToTextarea } from '@/utils/utils';
+import { useDark } from '@vueuse/core';
+import { useFileImportExport } from '@/composables/useFileImportExport';
 
 const props = defineProps<{
-    wildcardsStringProp: string;
+    wildcards: WildcardMap;
 }>();
 
 const emit = defineEmits<{
-    change: [changedWildcardsString: string];
+    change: [changedWildcards: WildcardMap];
+    intellisense: [];
 }>();
+
+const isDark = useDark();
 
 // 親がタグ挿入を実行するためのexpose
 const insertDanbooruTag = (
@@ -35,36 +57,29 @@ const insertDanbooruTag = (
     );
 };
 
-const selectedWildcard = ref<string | null>(null);
+const selectedWildcard = ref<string>();
 
 defineExpose({
     insertDanbooruTag,
     selectedWildcard,
 });
 
-const wildcardsString = ref('');
+const wildcardsWork = ref<WildcardMap>({});
 
 // 起動時の設定読み込みを監視
 watchEffect(() => {
-    wildcardsString.value = props.wildcardsStringProp;
+    wildcardsWork.value = props.wildcards;
 });
-
-const wildcardsObj = computed<WildcardMap>(() => parseWildcardsString(wildcardsString.value));
 
 const selectWildcard = (wildcardKey: string) => {
     selectedWildcard.value = wildcardKey;
-
-    if (selectedWildcard.value !== renamingWildcard.value) {
-        // リネーム中に他の行を選択した場合は終了
-        cancelRenamingWildcard();
-    }
 };
 
 const selectedWildcardString = computed<string>(() => {
     if (!selectedWildcard.value) {
         return '';
     }
-    return wildcardsObj.value[selectedWildcard.value]?.join('\n') || '';
+    return wildcardsWork.value[selectedWildcard.value]?.join('\n') || '';
 });
 
 const isWildcardSelected = (wildcardKey: string) => wildcardKey === selectedWildcard.value;
@@ -75,8 +90,14 @@ const newWildcardKey = ref<string>('');
 const newWildcardKeyTrim = computed(() => newWildcardKey.value.trim());
 const addNewWildcard = () => {
     if (addWildcard(newWildcardKeyTrim.value)) {
-        newWildcardKey.value = '';
         saveWildcard();
+
+        if (!sortedWildcard.value.includes(newWildcardKeyTrim.value)) {
+            // 追加したワイルドカードがフィルタ結果に含まれない場合はフィルタを解除
+            filterQuery.value = '';
+        }
+
+        newWildcardKey.value = '';
         nextTick(() => wildcardTextareaRef.value?.textareaRef.textarea.focus());
     }
 };
@@ -86,7 +107,7 @@ const addWildcard = (addingWildcardKey: string): boolean => {
         return false;
     }
 
-    wildcardsObj.value[addingWildcardKey] = [];
+    wildcardsWork.value[addingWildcardKey] = [];
     selectedWildcard.value = addingWildcardKey;
 
     return true;
@@ -103,7 +124,7 @@ const validateWildcardName = (name: string): boolean => {
         return false;
     }
 
-    if (Object.keys(wildcardsObj.value).includes(name)) {
+    if (Object.keys(wildcardsWork.value).includes(name)) {
         ElMessage.warning('Wildcard already exists!');
         return false;
     }
@@ -112,45 +133,36 @@ const validateWildcardName = (name: string): boolean => {
 };
 
 const deleteWildcard = (wildcardKey: string) => {
-    delete wildcardsObj.value[wildcardKey];
+    const updateSelectedIndex = (): number => {
+        const selectedIndex = sortedWildcard.value.indexOf(wildcardKey);
+        const newIndex = selectedIndex === 0 ? 0 : selectedIndex - 1;
+        return newIndex;
+    };
+    const newIndex = updateSelectedIndex();
+
+    delete wildcardsWork.value[wildcardKey];
+
     saveWildcard();
 
     // ワイルドカード削除不具合対応
     // (textareaが空になることでchangeが発火し、selectedWildcardに空文字が残っていた)
-    selectedWildcard.value = null;
+    selectedWildcard.value = sortedWildcard.value[newIndex];
 };
 
 const editWildcardString = (changedWildcardString: string) => {
-    if (selectedWildcard.value) {
+    if (!selectedWildcard.value) {
         // ワイルドカード削除不具合対応
         // (削除後はselectedWildcardがないので更新しない)
-        wildcardsObj.value[selectedWildcard.value] = changedWildcardString.split('\n');
-        saveWildcard();
+        return;
     }
+
+    const wildcardStrings = changedWildcardString.split('\n');
+    wildcardsWork.value[selectedWildcard.value] = wildcardStrings;
+    saveWildcard();
 };
 
 const saveWildcard = () => {
-    const parseWildcardsObject = (obj: WildcardMap): string => {
-        let result = '';
-
-        // キーを昇順でソート
-        const sortedKeys = Object.keys(obj).sort();
-
-        for (const key of sortedKeys) {
-            // キーを追加
-            result += `${key}:\n`;
-
-            // 配列の各値を追加
-            for (const value of obj[key]) {
-                result += `${value}\n`;
-            }
-        }
-
-        return result.replace(/\n$/, '');
-    };
-
-    wildcardsString.value = parseWildcardsObject(wildcardsObj.value);
-    emit('change', wildcardsString.value);
+    emit('change', wildcardsWork.value);
 };
 
 const renamingWildcard = ref('');
@@ -170,16 +182,15 @@ watch(renameWildcardInputRef, () => {
     renameWildcardInputRef.value?.[0].focus();
 });
 
-const saveRenamingWildcard = () => {
+const saveRenamingWildcard = (event: Event) => {
     if (renamedWildcard.value === renamingWildcard.value) {
         cancelRenamingWildcard();
         return;
     }
 
     if (addWildcard(renamedWildcard.value)) {
-        wildcardsObj.value[renamedWildcard.value] = wildcardsObj.value[renamingWildcard.value];
-        delete wildcardsObj.value[renamingWildcard.value];
-        saveWildcard();
+        wildcardsWork.value[renamedWildcard.value] = wildcardsWork.value[renamingWildcard.value];
+        deleteWildcard(renamingWildcard.value);
 
         // リネーム後を選択状態にするために保持
         const renamedWildcardName = renamedWildcard.value;
@@ -187,6 +198,16 @@ const saveRenamingWildcard = () => {
         cancelRenamingWildcard();
 
         selectWildcard(renamedWildcardName);
+
+        if (!sortedWildcard.value.includes(renamedWildcardName)) {
+            // リネームしたワイルドカードがフィルタ結果に含まれない場合はフィルタを解除
+            filterQuery.value = '';
+        }
+
+        // リネーム不具合対応
+        // (確定ボタンをクリックするとpタグのclickイベントが発生し、リネーム前のゾンビが残る
+        // 確定ボタンの@click.stopがなぜか効かないのでstopPropagation)
+        event.stopPropagation();
     }
 };
 
@@ -196,7 +217,32 @@ const cancelRenamingWildcard = () => {
     renameWildcardInputRef.value = null;
 };
 
-const sortedWildcard = computed<string[]>(() => Object.keys(wildcardsObj.value).sort());
+const filterQuery = ref('');
+const sortedWildcard = computed<string[]>(() => {
+    const wildcards = Object.keys(wildcardsWork.value);
+
+    const filteredWildcards = wildcards.filter((wildcard: string): boolean => {
+        const wildcardLowerCase = wildcard.toLowerCase();
+        const query = filterQuery.value;
+
+        let queryIndex = 0;
+        for (let i = 0; i < wildcardLowerCase.length && queryIndex < query.length; i++) {
+            if (wildcardLowerCase[i] === query[queryIndex]) {
+                queryIndex++;
+            }
+        }
+        return queryIndex === query.length;
+    });
+
+    return filteredWildcards.sort();
+});
+
+const onInputFilter = () => {
+    if (selectedWildcard.value && !sortedWildcard.value.includes(selectedWildcard.value)) {
+        // 選択中のワイルドカードがフィルタ結果に含まれない場合は選択を解除
+        selectedWildcard.value = undefined;
+    }
+};
 
 const onRenameInputFocus = () => {
     const input = renameWildcardInputRef.value![0].input!;
@@ -205,148 +251,258 @@ const onRenameInputFocus = () => {
 };
 
 const { copying, copyToClipboard } = useClipboardCopy();
+
+const { importSettings, exportSetting, fileList } = useFileImportExport();
+
+const exportWildcards = () =>
+    exportSetting(JSON.stringify(wildcardsWork.value), 'wildcards', 'json');
+const importWildcards: UploadRequestHandler = async (options: UploadRequestOptions) => {
+    selectedWildcard.value = undefined;
+    cancelRenamingWildcard();
+
+    const loadWildcard = (wildcardJson: string, settings: Settings) => {
+        const wildcards = JSON.parse(wildcardJson);
+        settings.wildcards = wildcards;
+        return settings;
+    };
+
+    const importedSettings = await importSettings(options.file, loadWildcard);
+    wildcardsWork.value = importedSettings.wildcards;
+};
+
+const onRenameInputBlur = () => {
+    cancelRenamingWildcard();
+};
 </script>
 
 <template>
     <!-- 追加エリア -->
-    <ElRow>
-        <ElCol :span="9">
-            <ElInput
-                v-model="newWildcardKey"
-                clearable
-                placeholder="New Wildcard"
-                @keydown.prevent.enter="addNewWildcard"
-            >
-                <template #append>
-                    <ElButton :disabled="!newWildcardKeyTrim" @click="addNewWildcard">Add</ElButton>
-                </template>
-            </ElInput>
+    <ElRow style="margin: 10px 0">
+        <ElCol :span="5">
+            <div style="margin-right: 5px">
+                <ElInput
+                    v-model="newWildcardKey"
+                    clearable
+                    placeholder="New Wildcard"
+                    size="small"
+                    @keydown.prevent.enter="addNewWildcard"
+                >
+                    <template #append>
+                        <ElButton
+                            :disabled="!newWildcardKeyTrim"
+                            size="small"
+                            @click="addNewWildcard"
+                        >
+                            Add
+                        </ElButton>
+                    </template>
+                </ElInput>
+            </div>
         </ElCol>
+
+        <ElCol :span="4">
+            <div style="margin-right: 5px">
+                <ElInput
+                    v-model="filterQuery"
+                    clearable
+                    placeholder="Filter Wildcard"
+                    :prefix-icon="Filter"
+                    size="small"
+                    @input="onInputFilter"
+                />
+            </div>
+        </ElCol>
+
+        <ElButton
+            v-show="sortedWildcard.length"
+            :class="{ 'dark-button-success': isDark }"
+            :icon="Upload"
+            size="small"
+            type="success"
+            @click="exportWildcards"
+        >
+            Export
+        </ElButton>
+        <ElUpload
+            v-model:file-list="fileList"
+            accept=".json"
+            :auto-upload="true"
+            :show-file-list="false"
+            :http-request="importWildcards"
+        >
+            <ElButton
+                :class="{ 'dark-button-success': isDark }"
+                :icon="Download"
+                size="small"
+                type="success"
+            >
+                Import
+            </ElButton>
+        </ElUpload>
     </ElRow>
 
     <ElRow>
         <!-- 選択エリア -->
         <ElCol :span="9">
-            <ElScrollbar :max-height="325">
-                <p
-                    v-for="wildcardKey in sortedWildcard"
-                    :class="{
-                        'wildcard-selected': isWildcardSelected(wildcardKey),
-                        'wildcard-renaming': isWildcardRenaming(wildcardKey),
-                    }"
-                    :key="wildcardKey"
-                    @click="selectWildcard(wildcardKey)"
-                    @dblclick="startRenamingWildcard(wildcardKey)"
-                >
-                    <!-- リネーム -->
-                    <ElInput
-                        v-if="isWildcardRenaming(wildcardKey)"
-                        v-model="renamedWildcard"
-                        @focus="onRenameInputFocus"
-                        @keydown.prevent.enter="saveRenamingWildcard"
-                        @keydown.prevent.esc="cancelRenamingWildcard"
-                        ref="renameWildcardInputRef"
-                    />
-                    <!-- wildcard名 -->
-                    <span v-else>
-                        {{ wildcardKey }}
-                    </span>
-
-                    <!-- 編集ボタン -->
-                    <template v-if="isWildcardSelected(wildcardKey) && !renamingWildcard">
-                        <span class="edit-buttons">
-                            <ElButtonGroup type="primary">
-                                <ElButton
-                                    circle
-                                    :icon="copying ? Checked : List"
-                                    @click="copyToClipboard(`__${wildcardKey}__`)"
-                                />
-
-                                <ElButton
-                                    circle
-                                    :icon="EditPen"
-                                    @click="startRenamingWildcard(wildcardKey)"
-                                />
-
-                                <ElPopconfirm
-                                    title="Are you sure to delete?"
-                                    :width="200"
-                                    @confirm="deleteWildcard(wildcardKey)"
-                                >
-                                    <template #reference>
-                                        <ElButton circle :icon="DeleteFilled" type="danger" />
-                                    </template>
-                                </ElPopconfirm>
-                            </ElButtonGroup>
+            <div class="wildcards-container">
+                <ElScrollbar max-height="65vh">
+                    <p
+                        v-for="wildcardKey in sortedWildcard"
+                        :class="{
+                            'wildcard-selected': isWildcardSelected(wildcardKey),
+                            'wildcard-renaming': isWildcardRenaming(wildcardKey),
+                        }"
+                        :key="wildcardKey"
+                        @click="selectWildcard(wildcardKey)"
+                        @dblclick="startRenamingWildcard(wildcardKey)"
+                    >
+                        <!-- リネーム -->
+                        <ElInput
+                            v-if="isWildcardRenaming(wildcardKey)"
+                            v-model="renamedWildcard"
+                            @focus="onRenameInputFocus"
+                            @keydown.prevent.enter="saveRenamingWildcard"
+                            @keydown.prevent.esc="cancelRenamingWildcard"
+                            ref="renameWildcardInputRef"
+                            @blur="onRenameInputBlur"
+                        />
+                        <!-- wildcard名 -->
+                        <span v-else>
+                            {{ wildcardKey }}
                         </span>
-                    </template>
 
-                    <template v-else-if="isWildcardRenaming(wildcardKey)">
-                        <span class="edit-buttons">
-                            <ElButtonGroup>
-                                <ElButton
-                                    :icon="Check"
-                                    type="success"
-                                    circle
-                                    @click.stop="saveRenamingWildcard"
-                                />
-                                <ElButton
-                                    :icon="Close"
-                                    type="info"
-                                    circle
-                                    @click.stop="cancelRenamingWildcard"
-                                />
-                            </ElButtonGroup>
-                        </span>
-                    </template>
-                </p>
-            </ElScrollbar>
+                        <!-- 編集ボタン -->
+                        <template v-if="isWildcardSelected(wildcardKey) && !renamingWildcard">
+                            <span class="edit-buttons">
+                                <ElButtonGroup type="info">
+                                    <ElButton
+                                        circle
+                                        :icon="copying ? Checked : List"
+                                        @click="copyToClipboard(`__${wildcardKey}__`)"
+                                    />
+
+                                    <ElButton
+                                        circle
+                                        :icon="EditPen"
+                                        @click="startRenamingWildcard(wildcardKey)"
+                                    />
+
+                                    <ElPopconfirm
+                                        title="Are you sure to delete?"
+                                        :width="200"
+                                        @confirm="deleteWildcard(wildcardKey)"
+                                    >
+                                        <template #reference>
+                                            <ElButton circle :icon="DeleteFilled" type="danger" />
+                                        </template>
+                                    </ElPopconfirm>
+                                </ElButtonGroup>
+                            </span>
+                        </template>
+
+                        <template v-else-if="isWildcardRenaming(wildcardKey)">
+                            <span class="edit-buttons">
+                                <ElButtonGroup>
+                                    <ElButton
+                                        :icon="Check"
+                                        type="success"
+                                        circle
+                                        @mousedown.prevent="saveRenamingWildcard"
+                                    />
+                                    <ElButton
+                                        :icon="Close"
+                                        type="info"
+                                        circle
+                                        @mousedown.prevent="cancelRenamingWildcard"
+                                    />
+                                </ElButtonGroup>
+                            </span>
+                        </template>
+                    </p>
+                </ElScrollbar>
+            </div>
         </ElCol>
 
         <!-- 編集エリア -->
         <ElCol :span="15">
-            <PromptTextarea
-                v-show="selectedWildcard"
-                ref="wildcardTextareaRef"
-                :rows="15"
-                :prompt-text-prop="selectedWildcardString"
-                @change="editWildcardString"
-            />
+            <template v-if="selectedWildcard">
+                <PromptTextarea
+                    v-show="selectedWildcard"
+                    ref="wildcardTextareaRef"
+                    :prompt-text-prop="selectedWildcardString"
+                    @change="editWildcardString"
+                    @keydown.ctrl.space.prevent="emit('intellisense')"
+                />
+            </template>
+
+            <div v-else class="empty-container">
+                <ElEmpty description=" ">
+                    <h3>Select Wildcard</h3>
+                </ElEmpty>
+            </div>
         </ElCol>
     </ElRow>
 </template>
 
 <style scoped>
+.wildcards-container {
+    height: 65vh;
+    margin-right: 5px;
+    border-radius: 5px;
+    border: var(--el-border);
+}
+
 .edit-buttons {
     position: absolute;
     right: 15px;
-    top: 2px;
+    top: 3px;
 }
 
 p {
     position: relative;
-    margin: 0px; /* リストアイテム間の間隔 */
-    margin-right: 10px; /* スクロールバー分を空ける */
-    padding: 10px; /* 内側の余白 */
-    border-radius: 5px; /* 角の丸み */
-    transition: background-color 0.2s; /* スムーズな背景色の変更 */
+    margin: 0px;
+    margin-right: 10px;
+    padding-top: 9px;
+    padding-bottom: 9px;
+    padding-left: 11px;
+    border-radius: 5px;
+    transition: background-color 0.2s;
     font-size: 14px;
 }
 
 p:hover {
-    background-color: #e0e0e0; /* ホバー時の背景色 */
-}
-
-.wildcard-selected {
-    background-color: lightblue;
+    background-color: var(--el-color-info-light-7);
 }
 
 .wildcard-selected,
 p.wildcard-selected:hover {
-    background-color: lightblue;
+    background-color: var(--el-color-primary-light-5);
 }
 
-.wildcard-renaming {
-    padding: 2px;
+.wildcard-renaming,
+p.wildcard-renaming:hover {
+    padding: 0;
+    padding-top: 3px;
+    padding-bottom: 2px;
+    background-color: var(--el-color-info-light-7);
+}
+
+.dark-button-success {
+    --el-button-bg-color: var(--el-color-success-light-3);
+    --el-button-border-color: var(--el-color-success-light-5);
+    --el-button-hover-bg-color: var(--el-color-success-light-7);
+    --el-button-hover-border-color: var(--el-color-success-light-8);
+}
+
+.empty-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 60vh;
+}
+
+:deep(.el-input__inner) {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 </style>

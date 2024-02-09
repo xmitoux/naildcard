@@ -66,10 +66,10 @@ export function createDynamicPrompt(template: string, wildcardMap: WildcardMap) 
     };
 
     const replaceVariants = (bracketedStr: string): string => {
-        // ()のエスケープ '\(', '\)' を更にエスケープ
+        // ()のエスケープをエスケープ
         const escBracketReplacedValue = bracketedStr
-            .replaceAll('\\(', '\\^')
-            .replaceAll('\\)', '\\$');
+            .replaceAll('\\(', '\\{')
+            .replaceAll('\\)', '\\}');
 
         let oldValue: string | null = null;
         let newValue = escBracketReplacedValue;
@@ -89,7 +89,7 @@ export function createDynamicPrompt(template: string, wildcardMap: WildcardMap) 
                 return selectedVariants;
             });
         }
-        const finalStr = newValue.replaceAll('\\^', '(').replaceAll('\\$', ')');
+        const finalStr = newValue.replaceAll('\\{', '(').replaceAll('\\}', ')');
         return finalStr;
     };
 
@@ -97,9 +97,14 @@ export function createDynamicPrompt(template: string, wildcardMap: WildcardMap) 
 
     // <>の選択 選択するかしないかの2択 負数の重みで選択しない重み付けが可能
     const onOffVariantsRegexp = /<([^>]*)>/g;
-    const replaceOnOffVariants = (str: string): string => {
+    const replaceOnOffVariants = (angleBracketedStr: string): string => {
+        // <>のエスケープをエスケープ
+        const escBracketReplacedValue = angleBracketedStr
+            .replaceAll('\\<', '\\[')
+            .replaceAll('\\>', '\\]');
+
         let oldValue: string | null = null;
-        let newValue = str;
+        let newValue = escBracketReplacedValue;
 
         while (oldValue !== newValue) {
             oldValue = newValue;
@@ -136,7 +141,8 @@ export function createDynamicPrompt(template: string, wildcardMap: WildcardMap) 
             });
         }
 
-        return newValue;
+        const finalStr = newValue.replaceAll('\\[', '<').replaceAll('\\]', '>');
+        return finalStr;
     };
 
     resultPrompt = replaceOnOffVariants(resultPrompt);

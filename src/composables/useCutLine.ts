@@ -1,3 +1,5 @@
+import { Ref, nextTick } from 'vue';
+
 export const useCutLine = (promptText: Ref<string>) => {
     const cutLine = (event: KeyboardEvent) => {
         if ((!event.ctrlKey && !event.metaKey) || event.key !== 'x') {

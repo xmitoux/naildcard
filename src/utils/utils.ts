@@ -1,34 +1,4 @@
-/**
- * wildcardのパース
- */
-export function parseWildcardsString(wildcardsStr: string) {
-    const output: WildcardMap = {};
-
-    const lines = wildcardsStr.split('\n');
-
-    let currentKey = '';
-    lines.forEach((line) => {
-        if (!line || /^\s*$/gi.test(line)) {
-            // Ignore empty lines or lines contain only spaces
-            if (currentKey) {
-                output[currentKey].push(line);
-            }
-            return;
-        } else if (line.endsWith(':')) {
-            // This is a key
-            currentKey = line.slice(0, -1); // Remove the trailing :
-            output[currentKey] = [];
-        } else {
-            // This is a value
-            // Ignore if no valid key is defined yet
-            if (currentKey) {
-                output[currentKey].push(line);
-            }
-        }
-    });
-
-    return output;
-}
+import { nextTick } from 'vue';
 
 export const insertDanbooruTagToTextarea = (
     tag: string,

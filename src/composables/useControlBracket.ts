@@ -1,3 +1,5 @@
+import { Ref, nextTick } from 'vue';
+
 type TextPosition = [start: number, end: number];
 type BracketType = 'curly' | 'square';
 type Action = 'add' | 'remove';

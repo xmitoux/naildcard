@@ -3,5 +3,6 @@
     "tabWidth": 4,
     "printWidth": 100,
     "vueIndentScriptAndStyle": false,
-    "htmlWhitespaceSensitivity": "ignore"
+    "htmlWhitespaceSensitivity": "ignore",
+    "endOfLine": "lf"
 }
