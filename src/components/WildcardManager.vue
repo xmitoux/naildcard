@@ -271,10 +271,7 @@ const importWildcards: UploadRequestHandler = async (options: UploadRequestOptio
 };
 
 const onRenameInputBlur = () => {
-    // リネーム確定ボタンクリックをキャンセルしないように非同期で実行
-    setTimeout(() => {
-        cancelRenamingWildcard();
-    }, 80);
+    cancelRenamingWildcard();
 };
 </script>
 
@@ -410,13 +407,13 @@ const onRenameInputBlur = () => {
                                         :icon="Check"
                                         type="success"
                                         circle
-                                        @click.stop="saveRenamingWildcard"
+                                        @mousedown.prevent="saveRenamingWildcard"
                                     />
                                     <ElButton
                                         :icon="Close"
                                         type="info"
                                         circle
-                                        @click.stop="cancelRenamingWildcard"
+                                        @mousedown.prevent="cancelRenamingWildcard"
                                     />
                                 </ElButtonGroup>
                             </span>
