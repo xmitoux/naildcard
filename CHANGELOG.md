@@ -22,7 +22,7 @@
     -   🚨これに伴い、以前のバージョンのWildcardデータが移行できなくなります。  
         https://github.com/xmitoux/naildcard-json-converter にあるツールからデータのコンバートを実施し、Wildcard Managerからインポートを行ってください。
 -   Danbooru Tag Helper に使用するタグデータの組み込みを廃止
-    -   [手順](#タグデータの準備)にしたがってデータを用意してください。
+    -   [手順](/README.md#タグデータの準備)にしたがってデータを用意してください。
 
 ### 🔄変更
 
