@@ -61,11 +61,17 @@ const onDiceButtonClick = () => {
     });
 };
 
+// 🎲ボタン押下時のプロンプト入力処理
 const insertPrompt = (prompt: string, wildcards: WildcardMap) => {
-    const textbox = document.querySelector('textarea');
-    if (!textbox) {
+    // プロンプトテキストエリアの要素を取得する
+    const promptAreaDiv = document.querySelector<HTMLDivElement>('.ProseMirror');
+    if (!promptAreaDiv) {
+        console.error('プロンプト入力欄がない😢');
         return;
     }
+
+    // プロンプト入力のたびに中身をクリアする
+    promptAreaDiv.innerHTML = '';
 
     const promptRemovedComment = removeCommentLines(prompt);
 
@@ -82,12 +88,13 @@ const insertPrompt = (prompt: string, wildcards: WildcardMap) => {
 
     const stringToInsert = createDynamicPrompt(promptRemovedComment, wildcardsRemovedComment);
 
-    textbox.value = stringToInsert;
-
-    // プロンプト欄のReactコンポーネントのinputイベントを発火させてテキスト入力を確定させる
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (textbox as any)._valueTracker = '';
-    textbox.dispatchEvent(new Event('input', { bubbles: true }));
+    // プロンプトの各行をp要素として追加していく
+    const lines = stringToInsert.split('\n');
+    lines.forEach((line) => {
+        const p = document.createElement('p');
+        p.textContent = line;
+        promptAreaDiv.appendChild(p);
+    });
 };
 
 const isNegativePromptVisible = () => {
